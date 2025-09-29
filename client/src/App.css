@@ -1,0 +1,451 @@
+/* Progress CONNECT Patient Portal Styles */
+
+:root {
+  --bcc-pink: #e5317a;
+  --bcc-green: #0e3b33;
+  --bcc-light-green: #53868b;
+  --bcc-light-pink: #f8d7e4;
+  --white: #ffffff;
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-600: #6c757d;
+  --gray-800: #343a40;
+  --danger: #dc3545;
+  --success: #28a745;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, var(--bcc-pink) 0%, var(--bcc-light-pink) 100%) fixed;
+  color: var(--gray-800);
+  min-height: 100vh;
+}
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Styles */
+.app-header {
+  position: sticky;
+  top: 0;
+  background: var(--bcc-green);
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  width: 100%;
+}
+
+.header-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.logo {
+  height: 50px;
+  margin-right: 1rem;
+}
+
+.app-title {
+  color: var(--white);
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: 0.5px;
+  flex-grow: 1;
+  text-align: center;
+  margin: 0;
+}
+
+/* Main Content */
+.app-main {
+  flex: 1;
+  padding: 2rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Survey Wizard Styles */
+.survey-wizard {
+  max-width: 800px;
+  width: 100%;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.wizard-content {
+  padding: 2.5rem;
+  min-height: 400px;
+}
+
+.wizard-navigation {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem;
+  background: var(--gray-100);
+  border-top: 1px solid var(--gray-300);
+}
+
+/* Step Styles */
+.step {
+  display: none;
+}
+
+.step.active {
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--bcc-green);
+  margin-top: 0;
+}
+
+h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Form Elements */
+label {
+  display: block;
+  margin: 1rem 0 0.5rem;
+  font-weight: 500;
+  color: var(--gray-800);
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  font-size: 1rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 5px;
+  background: var(--gray-100);
+  transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--bcc-light-green);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(83,134,139,0.3);
+  background: var(--white);
+}
+
+input[type="file"] {
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+/* Radio and Checkbox Groups */
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin: 0.6rem 0;
+}
+
+.inline label {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 5px;
+  transition: background-color 0.2s;
+}
+
+.inline label:hover {
+  background: var(--gray-100);
+}
+
+.inline input[type="radio"],
+.inline input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.4rem;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.8rem 1.8rem;
+  border: none;
+  border-radius: 30px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary {
+  background: var(--bcc-light-green);
+  color: var(--white);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #3d6c6d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-secondary {
+  background: var(--gray-600);
+  color: var(--white);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--gray-800);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--bcc-light-green);
+  border: 2px solid var(--bcc-light-green);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: var(--bcc-light-green);
+  color: var(--white);
+}
+
+.btn:disabled {
+  background: var(--gray-300);
+  color: var(--gray-600);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Progress Bar */
+.progress {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--gray-100);
+  border-radius: 10px 10px 0 0;
+}
+
+.progress-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--gray-300);
+  transition: background 0.3s;
+}
+
+.progress-dot.active {
+  background: var(--bcc-light-green);
+}
+
+/* Status and Loading */
+.status {
+  margin-top: 0.8rem;
+  font-weight: 500;
+  color: var(--bcc-green);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(0,0,0,0.15);
+  border-left-color: var(--bcc-light-green);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error Messages */
+.error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+}
+
+/* Required Field Indicator */
+.required {
+  color: var(--danger);
+  font-size: 0.8em;
+  vertical-align: super;
+}
+
+/* Special Sections */
+.privacy-box {
+  background-color: var(--gray-100);
+  border-left: 4px solid var(--bcc-light-green);
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.stage-confirm {
+  background: var(--bcc-light-pink);
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin: 1.5rem 0;
+  border-left: 4px solid var(--bcc-pink);
+}
+
+.extracted-data-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 1.5rem 0;
+}
+
+.extracted-data-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+/* File Upload */
+.file-input-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.file-input-row input[type="file"] {
+  flex-grow: 1;
+}
+
+.add-file-btn {
+  background: var(--bcc-light-green);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 5px;
+}
+
+.remove-file-btn {
+  background: var(--bcc-pink);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-content {
+    flex-wrap: wrap;
+    padding: 0.8rem;
+  }
+  
+  .logo {
+    height: 40px;
+  }
+  
+  .app-title {
+    font-size: 1.3rem;
+    order: 1;
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  .wizard-content {
+    padding: 1.5rem;
+  }
+  
+  .inline {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .file-input-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .file-input-row input[type="file"] {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 5px;
+  }
+  
+  .wizard-navigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus indicators for accessibility */
+.btn:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--bcc-light-green);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --bcc-pink: #d63384;
+    --bcc-green: #0a2e26;
+    --bcc-light-green: #455a64;
+    --gray-300: #adb5bd;
+  }
+}
