@@ -1,0 +1,45 @@
+{
+  "short_name": "BCC Portal",
+  "name": "BCC Progress CONNECT Patient Portal",
+  "description": "Breast Cancer Canada's comprehensive patient survey and treatment recommendation system",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0e3b33",
+  "background_color": "#f8d7e4",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["medical", "health"],
+  "screenshots": [
+    {
+      "src": "/screenshots/survey.png",
+      "type": "image/png",
+      "sizes": "1280x720"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Survey",
+      "short_name": "Survey",
+      "description": "Start a new patient survey",
+      "url": "/",
+      "icons": [{ "src": "/icons/survey.png", "sizes": "192x192" }]
+    }
+  ]
+}

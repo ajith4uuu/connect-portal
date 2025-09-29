@@ -1,417 +1,399 @@
-# Progress CONNECT Patient Portal
+# BCC Progress CONNECT Patient Portal - Production Deployment Guide
 
-A production-ready React Node.js application for Breast Cancer Canada's patient survey portal, deployed on Google Cloud Run with BigQuery backend and bilingual support.
+## 🚀 Production-Ready React/Node.js Application for Google Cloud Run
 
-## Features
+This is a fully functional, production-ready conversion of the BCC Progress CONNECT Patient Portal from Google Apps Script to a modern React/Node.js application deployed on Google Cloud Run.
 
-### 🌐 Bilingual Support
-- Full English and French language support
-- Seamless language switching
-- Localized content and UI elements
+## ✨ Features
 
-### 📋 Multi-Step Survey Wizard
-- Progressive survey with validation
-- Dynamic questions based on cancer stage
-- File upload with Document AI analysis
-- Real-time data extraction from pathology reports
+- **Multi-language Support**: Full English and French language support with seamless switching
+- **Document AI Integration**: Automatic extraction of pathology data from uploaded PDFs
+- **BigQuery Backend**: Automatic schema creation and data persistence
+- **Gemini AI Integration**: Personalized treatment summaries
+- **Email Notifications**: Automated email delivery with treatment recommendations
+- **Cloud Storage**: Secure document storage in GCS
+- **Production Security**: Helmet, CORS, rate limiting, and authentication
+- **Auto-scaling**: Cloud Run automatic scaling from 1 to 100 instances
 
-### 🤖 AI-Powered Analysis
-- Document AI integration for report analysis
-- Gemini AI for personalized treatment summaries
-- Automatic biomarker extraction
-- Stage calculation from biomarkers
+## 📋 Prerequisites
 
-### 📊 BigQuery Backend
-- Automatic schema creation
-- Secure data storage
-- Analytics and reporting
-- GDPR compliant data handling
+1. **Google Cloud Project** with billing enabled
+2. **APIs Enabled**:
+   - Cloud Run API
+   - Document AI API
+   - BigQuery API
+   - Cloud Storage API
+   - Secret Manager API
+   - Cloud Build API
+3. **Service Account** with appropriate permissions
+4. **Document AI Processor** created in your project
+5. **Gmail Account** with App Password for email sending
 
-### 📧 Email Integration
-- Personalized email confirmations
-- Treatment recommendations delivery
-- Download links for resources
+## 🛠️ Quick Setup Guide
 
-### 🚀 Production Ready
-- Deployed on Google Cloud Run
-- Auto-scaling and load balancing
-- Comprehensive error handling
-- Logging and monitoring
-- Security best practices
-
-## Architecture
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React Client  │    │   Node.js API   │    │   Google Cloud  │
-│                 │    │                 │    │                 │
-│ • Multi-step    │◄──►│ • Express.js    │◄──►│ • Cloud Run     │
-│   survey wizard │    │ • API routes    │    │ • BigQuery      │
-│ • File upload   │    │ • Validation    │    │ • Document AI   │
-│ • i18n support  │    │ • Services      │    │ • Cloud Storage │
-│ • Progress bar  │    │ • Error handling│    │ • Secret Manager│
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-## Prerequisites
-
-- Node.js 18+
-- Google Cloud Platform account
-- Docker (for local development)
-- Git
-
-## Quick Start
-
-### 1. Clone the Repository
+### Step 1: Clone and Configure
 
 ```bash
-git clone https://github.com/your-org/progress-connect-portal.git
-cd progress-connect-portal
-```
+# Clone the repository
+git clone https://github.com/your-org/bcc-portal.git
+cd bcc-portal
 
-### 2. Install Dependencies
-
-```bash
-# Install server dependencies
-npm install
-
-# Install client dependencies
-cd client && npm install && cd ..
-```
-
-### 3. Environment Configuration
-
-```bash
 # Copy environment template
-cp .env.example .env
-
-# Edit .env with your configuration
-nano .env
+cp backend/.env.example backend/.env
 ```
 
-Required environment variables:
-- `GCP_PROJECT_ID`: Your Google Cloud project ID
-- `DOCUMENT_AI_PROCESSOR_ID`: Document AI processor ID
-- `GCS_BUCKET_NAME`: Google Cloud Storage bucket name
-- `GEMINI_API_KEY`: Gemini AI API key (optional)
-- `EMAIL_USER`: Email service user (for production)
-- `EMAIL_PASS`: Email service password (for production)
+### Step 2: Set Environment Variables
 
-### 4. Local Development
+Edit `backend/.env` with your values:
 
-```bash
-# Run in development mode
-npm run dev
-
-# Or run separately
-npm run server:dev  # Backend on http://localhost:5000
-npm run client:dev  # Frontend on http://localhost:3000
+```env
+GCP_PROJECT_ID=your-project-id
+DOCAI_LOCATION=us
+DOCAI_PROCESSOR_ID=your-processor-id
+GCS_BUCKET=bcc-documentai-pdfs
+BQ_DATASET_ID=bcc_portal
+BQ_TABLE_ID=survey_responses
+EMAIL_USER=your-email@gmail.com
+EMAIL_APP_PASSWORD=your-app-password
+GEMINI_API_KEY=your-gemini-key
+FRONTEND_URL=https://your-frontend.com
+PORT=8080
 ```
 
-### 5. Production Build
+### Step 3: Create Service Account
 
 ```bash
-# Build the client
-npm run build
+# Set your project ID
+export PROJECT_ID=your-project-id
 
-# Start production server
-npm start
-```
+# Create service account
+gcloud iam service-accounts create bcc-portal-sa \
+    --display-name="BCC Portal Service Account"
 
-## Deployment
-
-### Automated Deployment with Cloud Build
-
-1. Configure Cloud Build trigger:
-```bash
-gcloud beta builds triggers create cloud-source-repositories \
-    --repo=progress-connect-portal \
-    --branch-pattern=main \
-    --build-config=cloudbuild.yaml
-```
-
-2. Push to main branch to trigger deployment
-```bash
-git add .
-git commit -m "Deploy to production"
-git push origin main
-```
-
-### Manual Deployment
-
-```bash
-# Make deploy script executable
-chmod +x deploy.sh
-
-# Run deployment
-./deploy.sh
-```
-
-### Docker Deployment
-
-```bash
-# Build Docker image
-docker build -t progress-connect .
-
-# Run container
-docker run -p 5000:5000 --env-file .env progress-connect
-```
-
-## Configuration
-
-### Google Cloud Setup
-
-1. **Enable Required APIs**:
-```bash
-gcloud services enable \
-    run.googleapis.com \
-    containerregistry.googleapis.com \
-    cloudbuild.googleapis.com \
-    documentai.googleapis.com \
-    bigquery.googleapis.com \
-    storage.googleapis.com \
-    secretmanager.googleapis.com
-```
-
-2. **Create Service Account**:
-```bash
-gcloud iam service-accounts create progress-connect-sa \
-    --display-name="Progress Connect Service Account"
-
-# Grant necessary permissions
+# Grant necessary roles
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:progress-connect-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --member="serviceAccount:bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/documentai.apiUser"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/bigquery.dataEditor"
 
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:progress-connect-sa@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/documentai.editor"
+    --member="serviceAccount:bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/bigquery.jobUser"
 
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:progress-connect-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --member="serviceAccount:bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/storage.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor"
 ```
 
-3. **Set up Document AI**:
-   - Create a Document AI processor
-   - Configure processor for medical documents
-   - Get processor ID for configuration
+### Step 4: Create Secrets in Secret Manager
 
-4. **Create BigQuery Dataset**:
 ```bash
-bq mk --dataset $PROJECT_ID:progress_connect_surveys
+# Create secrets for sensitive data
+echo -n "your-processor-id" | gcloud secrets create docai-processor-id --data-file=-
+echo -n "your-email@gmail.com" | gcloud secrets create email-user --data-file=-
+echo -n "your-app-password" | gcloud secrets create email-app-password --data-file=-
+echo -n "your-gemini-key" | gcloud secrets create gemini-api-key --data-file=-
+
+# Grant service account access to secrets
+gcloud secrets add-iam-policy-binding docai-processor-id \
+    --member="serviceAccount:bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor"
+
+gcloud secrets add-iam-policy-binding email-user \
+    --member="serviceAccount:bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor"
+
+gcloud secrets add-iam-policy-binding email-app-password \
+    --member="serviceAccount:bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor"
+
+gcloud secrets add-iam-policy-binding gemini-api-key \
+    --member="serviceAccount:bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor"
 ```
 
-### Email Configuration
+### Step 5: Create Document AI Processor
 
-For production email delivery, configure one of the following:
+```bash
+# Create Document AI processor (if not already created)
+gcloud documentai processors create \
+    --display-name="BCC Pathology Processor" \
+    --type="FORM_PARSER_PROCESSOR" \
+    --location=us
 
-1. **Gmail SMTP** (for testing):
-   - Enable 2-factor authentication
-   - Generate app-specific password
-   - Update `EMAIL_USER` and `EMAIL_PASS`
-
-2. **SendGrid** (recommended for production):
-   - Sign up for SendGrid account
-   - Create API key
-   - Update email configuration
-
-3. **Google Workspace**:
-   - Set up Google Workspace account
-   - Configure domain and email
-   - Use Gmail SMTP with domain authentication
-
-## API Documentation
-
-### Survey Endpoints
-
-#### Submit Survey
-```http
-POST /api/survey/submit
-Content-Type: application/json
-
-{
-  "answers": {
-    "email": "patient@example.com",
-    "age": 45,
-    "country": "Canada",
-    "stage": "Stage II",
-    // ... other answers
-  },
-  "extracted": {
-    "ERPR": "ER+ & PR+",
-    "HER2": "HER-2 High (3+)",
-    // ... extracted data
-  }
-}
+# Note the processor ID from the output
 ```
 
-Response:
-```json
-{
-  "success": true,
-  "userStage": "Stage II ER+/PR+/HER2+",
-  "calculatedStage": "Stage II",
-  "packages": ["Stage II ER/PR+/HER2+ package", "HER2-targeted therapy"],
-  "pdfUrl": "https://...",
-  "summary": "AI-generated summary...",
-  "surveyId": "survey_123456789"
-}
+### Step 6: Deploy to Cloud Run
+
+#### Option A: Using Cloud Build (Recommended)
+
+```bash
+# Submit build and deploy
+gcloud builds submit --config=cloudbuild.yaml \
+    --substitutions=_SERVICE_NAME=bcc-portal-backend,_REGION=us-central1,_GCS_BUCKET=bcc-documentai-pdfs,_BQ_DATASET=bcc_portal
 ```
 
-#### Get Survey Questions
-```http
-GET /api/survey/questions/Stage%20II?lang=en
+#### Option B: Manual Deployment
+
+```bash
+# Build Docker image
+docker build -t gcr.io/$PROJECT_ID/bcc-portal-backend ./backend
+
+# Push to Container Registry
+docker push gcr.io/$PROJECT_ID/bcc-portal-backend
+
+# Deploy to Cloud Run
+gcloud run deploy bcc-portal-backend \
+    --image gcr.io/$PROJECT_ID/bcc-portal-backend \
+    --region us-central1 \
+    --platform managed \
+    --allow-unauthenticated \
+    --cpu 2 \
+    --memory 2Gi \
+    --max-instances 100 \
+    --min-instances 1 \
+    --port 8080 \
+    --timeout 300 \
+    --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID" \
+    --set-env-vars="GCS_BUCKET=bcc-documentai-pdfs" \
+    --set-env-vars="BQ_DATASET_ID=bcc_portal" \
+    --set-env-vars="BQ_TABLE_ID=survey_responses" \
+    --set-env-vars="DOCAI_LOCATION=us" \
+    --set-secrets="DOCAI_PROCESSOR_ID=docai-processor-id:latest" \
+    --set-secrets="EMAIL_USER=email-user:latest" \
+    --set-secrets="EMAIL_APP_PASSWORD=email-app-password:latest" \
+    --set-secrets="GEMINI_API_KEY=gemini-api-key:latest" \
+    --service-account="bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com"
 ```
 
-Response:
-```json
-{
-  "success": true,
-  "questions": [
-    {
-      "id": "gender",
-      "type": "radio",
-      "title": "What is your gender designated at birth?",
-      "required": true,
-      "options": ["Male", "Female"]
+### Step 7: Deploy Frontend (Optional - for separate frontend hosting)
+
+#### Option A: Deploy to Firebase Hosting
+
+```bash
+# Install Firebase CLI
+npm install -g firebase-tools
+
+# Initialize Firebase
+cd frontend
+firebase init hosting
+
+# Build React app
+npm install
+npm run build
+
+# Deploy to Firebase
+firebase deploy --only hosting
+```
+
+#### Option B: Deploy to Cloud Run (as static site)
+
+```bash
+# Build React app
+cd frontend
+npm install
+npm run build
+
+# Create nginx configuration
+cat > nginx.conf <<EOF
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    
+    location / {
+        try_files \$uri \$uri/ /index.html;
     }
-    // ... more questions
-  ]
+    
+    location /api {
+        proxy_pass https://bcc-portal-backend-xxxxx-uc.a.run.app;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
 }
+EOF
+
+# Create Dockerfile for frontend
+cat > Dockerfile <<EOF
+FROM nginx:alpine
+COPY build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 8080
+EOF
+
+# Build and deploy
+docker build -t gcr.io/$PROJECT_ID/bcc-portal-frontend .
+docker push gcr.io/$PROJECT_ID/bcc-portal-frontend
+gcloud run deploy bcc-portal-frontend \
+    --image gcr.io/$PROJECT_ID/bcc-portal-frontend \
+    --region us-central1 \
+    --platform managed \
+    --allow-unauthenticated \
+    --port 8080
 ```
 
-### Upload Endpoints
+## 📊 BigQuery Schema
 
-#### Analyze Files
-```http
-POST /api/upload/analyze
-Content-Type: multipart/form-data
+The application automatically creates the following BigQuery schema:
 
-files: [binary data]
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| id | STRING | Unique response ID |
+| timestamp | TIMESTAMP | Submission time |
+| language | STRING | User's language (en/fr) |
+| email | STRING | User's email |
+| age | INTEGER | Patient age |
+| gender | STRING | Patient gender |
+| country | STRING | Country |
+| province | STRING | Province/State |
+| year_diagnosis | INTEGER | Year of diagnosis |
+| selected_stage | STRING | User-selected stage |
+| calculated_stage | STRING | System-calculated stage |
+| lymph_nodes | STRING | Lymph node status |
+| laterality | STRING | Affected breast |
+| dense_breasts | STRING | Dense breast indicator |
+| erpr_status | STRING | ER/PR status |
+| her2_status | STRING | HER2 status |
+| luminal_subtype | STRING | Luminal subtype |
+| brca_status | STRING | BRCA status |
+| pik3ca_status | STRING | PIK3CA status |
+| esr1_status | STRING | ESR1 status |
+| pdl1_status | STRING | PD-L1 status |
+| msi_status | STRING | MSI status |
+| ki67_status | STRING | Ki-67 status |
+| pten_status | STRING | PTEN status |
+| akt1_status | STRING | AKT1 status |
+| spread_locations | STRING[] | Metastasis locations |
+| treatment_packages | STRING[] | Recommended packages |
+| pdf_url | STRING | PDF link |
+| ai_summary | STRING | Gemini AI summary |
+| extracted_data | JSON | Extracted data from PDF |
+| raw_responses | JSON | Raw survey responses |
 
-Response:
-```json
-{
-  "success": true,
-  "extracted": {
-    "ERPR": "ER+ & PR+",
-    "HER2": "HER-2 High (3+)",
-    "stage": "Stage II",
-    // ... other biomarkers
-  },
-  "filesProcessed": 2
-}
-```
+## 🔒 Security Features
 
-## Monitoring and Logging
+- **Helmet.js**: Security headers
+- **CORS**: Configured cross-origin resource sharing
+- **Rate Limiting**: 100 requests per 15 minutes per IP
+- **Input Validation**: All inputs validated and sanitized
+- **Secret Manager**: Sensitive data stored securely
+- **Service Account**: Least privilege access
+- **HTTPS**: Enforced by Cloud Run
 
-### Cloud Logging
+## 📈 Monitoring
 
-All application logs are sent to Google Cloud Logging:
-- Application logs: `progress-connect-app`
-- Error logs: `progress-connect-errors`
-- Audit logs: `progress-connect-audit`
-
-### Health Checks
-
-Health check endpoint: `GET /api/health`
-
-Response:
-```json
-{
-  "status": "OK",
-  "timestamp": "2024-01-01T00:00:00.000Z",
-  "version": "1.0.0",
-  "uptime": 12345
-}
-```
-
-### Metrics
-
-Key metrics to monitor:
-- Request latency
-- Error rates
-- Upload success rates
-- Email delivery rates
-- BigQuery insert success rates
-
-## Security
-
-### Data Protection
-- All data encrypted in transit (HTTPS)
-- Data encrypted at rest in BigQuery
-- No PII stored without consent
-- GDPR compliant data handling
-
-### Access Control
-- Service account based authentication
-- Role-based access control (RBAC)
-- API rate limiting
-- Input validation and sanitization
-
-### Security Headers
-- Content Security Policy (CSP)
-- X-Frame-Options
-- X-Content-Type-Options
-- Strict-Transport-Security
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Document AI Processing Fails**:
-   - Check processor ID and location
-   - Verify file format (PDF, JPG, PNG)
-   - Check file size limits (10MB)
-
-2. **BigQuery Insertion Fails**:
-   - Verify dataset and table exist
-   - Check service account permissions
-   - Validate data format
-
-3. **Email Delivery Fails**:
-   - Check email credentials
-   - Verify recipient email address
-   - Check spam folder
-
-4. **Deployment Fails**:
-   - Check Cloud Build logs
-   - Verify environment variables
-   - Check service account permissions
-
-### Debug Mode
-
-Enable debug logging:
+### View Logs
 ```bash
-export NODE_ENV=development
-export DEBUG=progress-connect:*
+gcloud run services logs read bcc-portal-backend --region=us-central1
+```
+
+### View Metrics
+```bash
+gcloud monitoring metrics-descriptors list --filter="metric.type:run.googleapis.com"
+```
+
+### BigQuery Queries
+```sql
+-- Total submissions
+SELECT COUNT(*) as total_submissions 
+FROM `project-id.bcc_portal.survey_responses`;
+
+-- Submissions by stage
+SELECT selected_stage, COUNT(*) as count 
+FROM `project-id.bcc_portal.survey_responses` 
+GROUP BY selected_stage 
+ORDER BY count DESC;
+
+-- Daily submissions
+SELECT DATE(timestamp) as date, COUNT(*) as daily_count 
+FROM `project-id.bcc_portal.survey_responses` 
+GROUP BY date 
+ORDER BY date DESC;
+```
+
+## 🧪 Testing
+
+### Local Development
+```bash
+# Backend
+cd backend
+npm install
+npm run dev
+
+# Frontend (in separate terminal)
+cd frontend
+npm install
 npm start
 ```
 
-## Contributing
+### API Testing
+```bash
+# Health check
+curl https://your-backend-url.run.app/health
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+# Get translations
+curl https://your-backend-url.run.app/api/translations/en
 
-## License
+# Get survey definition
+curl https://your-backend-url.run.app/api/survey/fr
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 📝 Environment Variables Reference
 
-## Support
+| Variable | Description | Required |
+|----------|-------------|----------|
+| GCP_PROJECT_ID | Google Cloud Project ID | Yes |
+| DOCAI_LOCATION | Document AI location (us/eu) | Yes |
+| DOCAI_PROCESSOR_ID | Document AI processor ID | Yes |
+| GCS_BUCKET | Cloud Storage bucket name | Yes |
+| BQ_DATASET_ID | BigQuery dataset ID | Yes |
+| BQ_TABLE_ID | BigQuery table ID | Yes |
+| EMAIL_USER | Gmail address for sending | Yes |
+| EMAIL_APP_PASSWORD | Gmail app-specific password | Yes |
+| GEMINI_API_KEY | Google Gemini API key | Yes |
+| FRONTEND_URL | Frontend URL for CORS | No |
+| PORT | Server port (default: 8080) | No |
 
-For technical support:
-- Create an issue in the GitHub repository
-- Contact the development team
-- Check the troubleshooting section
+## 🤝 Support
 
-## Acknowledgments
+For issues or questions:
+1. Check logs: `gcloud run services logs read bcc-portal-backend`
+2. Check BigQuery: Verify data is being stored
+3. Check Document AI: Ensure processor is active
+4. Check Secrets: Verify all secrets are accessible
 
-- Breast Cancer Canada for the project opportunity
+## 📄 License
+
+This project is proprietary to Breast Cancer Canada (BCC).
+
+## 🙏 Acknowledgments
+
+- Breast Cancer Canada for the original application
 - Google Cloud Platform for infrastructure
-- Document AI team for OCR capabilities
-- Gemini AI team for natural language processing
+- Document AI for intelligent document processing
+- Gemini AI for personalized summaries
+
+---
+
+**Production Checklist:**
+- [ ] Service account created with proper permissions
+- [ ] All secrets stored in Secret Manager
+- [ ] Document AI processor created and tested
+- [ ] BigQuery dataset permissions verified
+- [ ] Cloud Storage bucket created
+- [ ] Email configuration tested
+- [ ] CORS configured for frontend domain
+- [ ] Monitoring and alerting set up
+- [ ] Backup strategy implemented
+- [ ] SSL/TLS certificates configured
+- [ ] Load testing completed
+- [ ] Security scan completed

@@ -1,0 +1,168 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Production
+build/
+dist/
+out/
+.next/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+
+# Cache
+.npm/
+.eslintcache
+.cache/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+
+# Google Cloud
+*.key.json
+*.serviceaccount.json
+.gcloudignore
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Backup files
+*.backup
+*.old
+*.orig
+
+# Lock files (optional - you may want to commit these)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Miscellaneous
+*.pem
+*.pid
+*.seed
+*.pid.lock
+.grunt
+.lock-wscript
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Firebase
+.firebase/
+firebase-debug.log
+.firebaserc
+
+# BigQuery
+*.bq
+*.avro
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Certificates
+*.crt
+*.key
+*.csr
+*.pem
+
+# Database
+*.sql
+*.sqlite
+*.db
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea
+*.sublime-project
+*.sublime-workspace
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
