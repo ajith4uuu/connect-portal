@@ -13,7 +13,7 @@ import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 function Survey({ onComplete }) {
   const { t, i18n } = useTranslation();
