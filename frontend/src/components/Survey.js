@@ -14,6 +14,7 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || '';
+const DOC_API_URL = process.env.REACT_APP_DOC_API_URL || '';
 
 function Survey({ onComplete }) {
   const { t, i18n } = useTranslation();
@@ -89,21 +90,23 @@ function Survey({ onComplete }) {
     formData.append('lang', i18n.language);
 
     try {
-      const response = await axios.post(`${API_URL}/api/upload`, formData, {
+      const endpoint = DOC_API_URL || `${API_URL}/api/upload`;
+      const response = await axios.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
-      setExtractedData(response.data.data);
-      
+
+      const payload = response.data?.data || response.data || {};
+      setExtractedData(payload);
+
       // Prefill form with extracted data
       setFormData(prev => ({
         ...prev,
-        age: response.data.data.age || prev.age,
-        province: response.data.data.province || prev.province,
-        country: response.data.data.country || prev.country,
-        stage: response.data.data.stage || prev.stage
+        age: payload.age || prev.age,
+        province: payload.province || prev.province,
+        country: payload.country || prev.country,
+        stage: payload.stage || prev.stage
       }));
-      
+
       toast.success(t('upload_successful'));
     } catch (error) {
       toast.error(t('upload_error'));
