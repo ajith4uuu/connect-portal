@@ -474,6 +474,9 @@ app.post('/api/submit', async (req, res) => {
 
 // OTP: send code
 app.post('/api/otp/send', async (req, res) => {
+  if (process.env.OTP_ENABLED === 'false') {
+    return res.status(501).json({ error: 'OTP disabled' });
+  }
   try {
     const { email, lang = 'en' } = req.body || {};
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -522,6 +525,9 @@ app.post('/api/otp/send', async (req, res) => {
 
 // OTP: verify code
 app.post('/api/otp/verify', async (req, res) => {
+  if (process.env.OTP_ENABLED === 'false') {
+    return res.status(501).json({ error: 'OTP disabled' });
+  }
   try {
     const { email, code } = req.body || {};
     if (!email || !code) return res.status(400).json({ error: 'Missing email or code' });
