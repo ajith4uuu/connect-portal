@@ -124,9 +124,25 @@ async function initializeBigQuery() {
         { name: 'extracted_data', type: 'JSON', mode: 'NULLABLE' },
         { name: 'raw_responses', type: 'JSON', mode: 'NULLABLE' }
       ];
-      
+
       await dataset.createTable(tableId, { schema });
       console.log(`Table ${tableId} created with schema.`);
+    }
+
+    // Ensure OTP table exists
+    const [tablesOtp] = await dataset.getTables();
+    const otpExists = tablesOtp.some(t => t.id === 'otp_codes');
+    if (!otpExists) {
+      const otpSchema = [
+        { name: 'email', type: 'STRING', mode: 'REQUIRED' },
+        { name: 'code', type: 'STRING', mode: 'REQUIRED' },
+        { name: 'expires_at', type: 'TIMESTAMP', mode: 'REQUIRED' },
+        { name: 'created_at', type: 'TIMESTAMP', mode: 'REQUIRED' },
+        { name: 'used', type: 'BOOL', mode: 'REQUIRED' },
+        { name: 'attempts', type: 'INTEGER', mode: 'REQUIRED' }
+      ];
+      await dataset.createTable('otp_codes', { schema: otpSchema });
+      console.log('Table otp_codes created with schema.');
     }
   } catch (error) {
     console.error('Error initializing BigQuery:', error);
