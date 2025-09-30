@@ -39,16 +39,21 @@ gcloud services enable run.googleapis.com \
 
 echo "✅ APIs enabled"
 
-# Create service account
-echo "👤 Creating service account..."
-gcloud iam service-accounts create bcc-portal-sa \
-    --display-name="BCC Portal Service Account" \
-    --quiet || echo "Service account already exists"
+# Service account setup
+echo "👤 Service account setup"
+read -p "Enter existing service account email to use (or press Enter to create one): " SA_EMAIL
+if [ -z "$SA_EMAIL" ]; then
+    echo "Creating service account..."
+    gcloud iam service-accounts create bcc-portal-sa \
+        --display-name="BCC Portal Service Account" \
+        --quiet || echo "Service account already exists"
+    SERVICE_ACCOUNT="bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com"
+else
+    SERVICE_ACCOUNT="$SA_EMAIL"
+fi
 
 # Grant roles to service account
 echo "🔐 Granting permissions to service account..."
-SERVICE_ACCOUNT="bcc-portal-sa@$PROJECT_ID.iam.gserviceaccount.com"
-
 for role in \
     "roles/documentai.apiUser" \
     "roles/bigquery.dataEditor" \
@@ -63,7 +68,7 @@ do
         --quiet || true
 done
 
-echo "✅ Service account configured"
+echo "✅ Service account configured: $SERVICE_ACCOUNT"
 
 # Create GCS bucket
 echo "🗂️ Creating Cloud Storage bucket..."
@@ -72,9 +77,11 @@ gsutil mb -p $PROJECT_ID -l us-central1 gs://$BUCKET_NAME || echo "Bucket alread
 echo "✅ Bucket created: $BUCKET_NAME"
 
 # Create BigQuery dataset
-echo "📊 Creating BigQuery dataset..."
-bq mk -f --location=US --dataset $PROJECT_ID:bcc_portal || echo "Dataset already exists"
-echo "✅ BigQuery dataset created"
+echo "📊 BigQuery dataset setup"
+read -p "Enter BigQuery dataset ID (default: progressconnect): " DATASET_ID
+DATASET_ID=${DATASET_ID:-progressconnect}
+bq mk -f --location=US --dataset $PROJECT_ID:$DATASET_ID || echo "Dataset already exists"
+echo "✅ BigQuery dataset: $DATASET_ID"
 
 # Get Document AI processor ID
 echo "📄 Document AI Setup"
@@ -145,7 +152,7 @@ gcloud run deploy bcc-portal-backend \
     --timeout 300 \
     --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID" \
     --set-env-vars="GCS_BUCKET=$BUCKET_NAME" \
-    --set-env-vars="BQ_DATASET_ID=bcc_portal" \
+    --set-env-vars="BQ_DATASET_ID=$DATASET_ID" \
     --set-env-vars="BQ_TABLE_ID=survey_responses" \
     --set-env-vars="DOCAI_LOCATION=us" \
     --set-secrets="DOCAI_PROCESSOR_ID=docai-processor-id:latest" \
