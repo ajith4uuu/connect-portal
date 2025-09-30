@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -39,6 +39,7 @@ function Survey({ onComplete }) {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [exitDialog, setExitDialog] = useState(false);
+  const manualFileInputRef = useRef(null);
 
 
   // Static steps before dynamic questions
@@ -82,6 +83,14 @@ function Survey({ onComplete }) {
       }
     }
   });
+
+  const handleManualSelect = (e) => {
+    const selected = Array.from(e.target.files || []);
+    if (!selected.length) return;
+    setFiles(prev => [...prev, ...selected]);
+    handleFileUpload(selected);
+    e.target.value = '';
+  };
 
   const handleFileUpload = async (uploadFiles) => {
     setUploading(true);
@@ -335,9 +344,23 @@ function Survey({ onComplete }) {
                 )}
               </Box>
             )}
-            
+
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <input
+                ref={manualFileInputRef}
+                type="file"
+                accept="application/pdf,image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={handleManualSelect}
+              />
+              <Button variant="contained" startIcon={<CloudUpload />} onClick={() => manualFileInputRef.current?.click()}>
+                Add another report
+              </Button>
+            </Box>
+
             {uploading && <LinearProgress sx={{ mb: 2 }} />}
-            
+
             <Typography variant="h6" gutterBottom>{t('patient_info_title')}</Typography>
             
             <TextField
