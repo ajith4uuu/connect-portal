@@ -12,23 +12,25 @@ function Header() {
     i18n.changeLanguage(event.target.value);
   };
 
+  const currentLang = (i18n.language || 'en').startsWith('fr') ? 'fr' : 'en';
+
   return (
     <AppBar position="sticky" sx={{ backgroundColor: '#0e3b33' }}>
-      <Toolbar sx={{ justifyContent: 'space-between' }}>
+      <Toolbar sx={{ justifyContent: 'space-between', minHeight: 120 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <img
             src="https://progressconnect.ca/wp-content/uploads/2023/10/BCC-PC-Light-Pink-Pantone-250.png"
             alt="BCC Logo"
-            style={{ height: '50px' }}
+            style={{ height: '70px', margin: '10px 0' }}
           />
           <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '0.5px' }}>
             Progress CONNECT
           </Typography>
         </Box>
-        
+
         <FormControl variant="outlined" size="small">
           <Select
-            value={i18n.language}
+            value={currentLang}
             onChange={handleLanguageChange}
             sx={{
               backgroundColor: 'white',

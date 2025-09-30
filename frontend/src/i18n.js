@@ -3,7 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 // Translation resources
 const resources = {
@@ -36,6 +36,14 @@ const resources = {
       privacy_link: "We value your privacy and will not share your email address.",
       email_label: "Email Address",
       email_placeholder: "you@example.com",
+      send_otp: "Send Code",
+      verify_otp: "Verify Code",
+      otp_label: "Verification Code",
+      otp_placeholder: "123456",
+      otp_sent: "Verification code sent",
+      otp_verified: "Email verified",
+      otp_invalid: "Invalid or expired code",
+      otp_required: "Please verify your email",
       
       // Privacy
       privacy_title: "Privacy Statement",
@@ -151,6 +159,14 @@ const resources = {
       privacy_link: "Nous respectons votre vie privée et ne partagerons pas votre adresse courriel.",
       email_label: "Adresse courriel",
       email_placeholder: "vous@exemple.com",
+      send_otp: "Envoyer le code",
+      verify_otp: "Vérifier le code",
+      otp_label: "Code de vérification",
+      otp_placeholder: "123456",
+      otp_sent: "Code envoyé",
+      otp_verified: "Courriel vérifié",
+      otp_invalid: "Code invalide ou expiré",
+      otp_required: "Veuillez vérifier votre courriel",
       
       // Privacy
       privacy_title: "Déclaration de confidentialité",

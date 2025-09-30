@@ -123,13 +123,13 @@ function App() {
             <Header />
             <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
               <Routes>
-                <Route 
-                  path="/" 
-                  element={<Survey onComplete={setSurveyData} />} 
+                <Route
+                  path="/"
+                  element={<Survey onComplete={setSurveyData} />}
                 />
-                <Route 
-                  path="/thank-you" 
-                  element={<ThankYou data={surveyData} />} 
+                <Route
+                  path="/thank-you"
+                  element={<ThankYou data={surveyData} />}
                 />
               </Routes>
             </Container>

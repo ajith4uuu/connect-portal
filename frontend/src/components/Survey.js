@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -13,7 +13,8 @@ import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_URL = process.env.REACT_APP_API_URL || '';
+const DOC_API_URL = process.env.REACT_APP_DOC_API_URL || '';
 
 function Survey({ onComplete }) {
   const { t, i18n } = useTranslation();
@@ -38,6 +39,8 @@ function Survey({ onComplete }) {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [exitDialog, setExitDialog] = useState(false);
+  const manualFileInputRef = useRef(null);
+
 
   // Static steps before dynamic questions
   const staticSteps = [
@@ -55,6 +58,8 @@ function Survey({ onComplete }) {
   useEffect(() => {
     loadSurveyDefinition();
   }, [i18n.language]);
+
+
 
   const loadSurveyDefinition = async () => {
     try {
@@ -79,6 +84,14 @@ function Survey({ onComplete }) {
     }
   });
 
+  const handleManualSelect = (e) => {
+    const selected = Array.from(e.target.files || []);
+    if (!selected.length) return;
+    setFiles(prev => [...prev, ...selected]);
+    handleFileUpload(selected);
+    e.target.value = '';
+  };
+
   const handleFileUpload = async (uploadFiles) => {
     setUploading(true);
     const formData = new FormData();
@@ -89,21 +102,23 @@ function Survey({ onComplete }) {
     formData.append('lang', i18n.language);
 
     try {
-      const response = await axios.post(`${API_URL}/api/upload`, formData, {
+      const endpoint = DOC_API_URL || `${API_URL}/api/upload`;
+      const response = await axios.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
-      setExtractedData(response.data.data);
-      
+
+      const payload = response.data?.data || response.data || {};
+      setExtractedData(payload);
+
       // Prefill form with extracted data
       setFormData(prev => ({
         ...prev,
-        age: response.data.data.age || prev.age,
-        province: response.data.data.province || prev.province,
-        country: response.data.data.country || prev.country,
-        stage: response.data.data.stage || prev.stage
+        age: payload.age || prev.age,
+        province: payload.province || prev.province,
+        country: payload.country || prev.country,
+        stage: payload.stage || prev.stage
       }));
-      
+
       toast.success(t('upload_successful'));
     } catch (error) {
       toast.error(t('upload_error'));
@@ -246,13 +261,13 @@ function Survey({ onComplete }) {
             <Typography variant="h5" gutterBottom>{t('email_title')}</Typography>
             <Typography paragraph dangerouslySetInnerHTML={{ __html: t('email_text') }} />
             <Typography paragraph>{t('privacy_link')}</Typography>
-            
+
             <TextField
               fullWidth
               label={`${t('email_label')} *`}
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               error={!!errors.email}
               helperText={errors.email}
               placeholder={t('email_placeholder')}
@@ -329,9 +344,23 @@ function Survey({ onComplete }) {
                 )}
               </Box>
             )}
-            
+
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <input
+                ref={manualFileInputRef}
+                type="file"
+                accept="application/pdf,image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={handleManualSelect}
+              />
+              <Button variant="contained" startIcon={<CloudUpload />} onClick={() => manualFileInputRef.current?.click()}>
+                Add another report
+              </Button>
+            </Box>
+
             {uploading && <LinearProgress sx={{ mb: 2 }} />}
-            
+
             <Typography variant="h6" gutterBottom>{t('patient_info_title')}</Typography>
             
             <TextField
@@ -592,7 +621,7 @@ function Survey({ onComplete }) {
   return (
     <Card>
       <CardContent>
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+        <Stepper activeStep={activeStep} sx={{ mb: 4 }} alternativeLabel>
           {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
             <Step key={index}>
               <StepLabel>{index === activeStep ? label : ''}</StepLabel>
