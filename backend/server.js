@@ -469,6 +469,89 @@ app.post('/api/submit', async (req, res) => {
   }
 });
 
+// OTP: send code
+app.post('/api/otp/send', async (req, res) => {
+  try {
+    const { email, lang = 'en' } = req.body || {};
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email' });
+    }
+
+    const code = (Math.floor(100000 + Math.random() * 900000)).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    try {
+      const datasetId = process.env.BQ_DATASET_ID || 'bcc_portal';
+      const otpRow = {
+        email,
+        code,
+        expires_at: expiresAt.toISOString(),
+        created_at: new Date().toISOString(),
+        used: false,
+        attempts: 0
+      };
+      await bigquery.dataset(datasetId).table('otp_codes').insert([otpRow]);
+    } catch (e) {
+      otpStore.set(email, { code, expiresAt, attempts: 0, used: false });
+    }
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Your verification code',
+      text: `Your verification code is ${code}. It expires in 10 minutes.`
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('OTP send error:', err);
+    res.status(500).json({ error: 'Failed to send code' });
+  }
+});
+
+// OTP: verify code
+app.post('/api/otp/verify', async (req, res) => {
+  try {
+    const { email, code } = req.body || {};
+    if (!email || !code) return res.status(400).json({ error: 'Missing email or code' });
+
+    let match = null;
+    try {
+      const datasetId = process.env.BQ_DATASET_ID || 'bcc_portal';
+      const query = {
+        query: `SELECT email, code, expires_at, used FROM \`${bigquery.projectId}.${datasetId}.otp_codes\` WHERE email=@email ORDER BY created_at DESC LIMIT 1`,
+        params: { email }
+      };
+      const [rows] = await bigquery.query(query);
+      if (rows && rows[0]) match = rows[0];
+      if (match && new Date(match.expires_at) < new Date()) return res.status(400).json({ error: 'Code expired' });
+      if (match && match.used) return res.status(400).json({ error: 'Code already used' });
+      if (match && match.code !== code) return res.status(400).json({ error: 'Invalid code' });
+      if (match) {
+        await bigquery.query({
+          query: `UPDATE \`${bigquery.projectId}.${datasetId}.otp_codes\` SET used=true WHERE email=@email AND code=@code`,
+          params: { email, code }
+        });
+        return res.json({ success: true });
+      }
+    } catch (e) {
+      // fall back to memory
+    }
+
+    const rec = otpStore.get(email);
+    if (!rec) return res.status(400).json({ error: 'No code found' });
+    if (rec.used) return res.status(400).json({ error: 'Code already used' });
+    if (rec.expiresAt < new Date()) return res.status(400).json({ error: 'Code expired' });
+    if (rec.code !== code) return res.status(400).json({ error: 'Invalid code' });
+    rec.used = true;
+    otpStore.set(email, rec);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('OTP verify error:', err);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
