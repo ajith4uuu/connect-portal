@@ -16,12 +16,12 @@ function Header() {
 
   return (
     <AppBar position="sticky" sx={{ backgroundColor: '#0e3b33' }}>
-      <Toolbar sx={{ justifyContent: 'space-between', minHeight: 80 }}>
+      <Toolbar sx={{ justifyContent: 'space-between', minHeight: 96 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <img
             src="https://progressconnect.ca/wp-content/uploads/2023/10/BCC-PC-Light-Pink-Pantone-250.png"
             alt="BCC Logo"
-            style={{ height: '60px' }}
+            style={{ height: '70px' }}
           />
           <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '0.5px' }}>
             Progress CONNECT
