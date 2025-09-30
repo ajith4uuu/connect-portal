@@ -498,14 +498,22 @@ app.post('/api/otp/send', async (req, res) => {
       otpStore.set(email, { code, expiresAt, attempts: 0, used: false });
     }
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Your verification code',
-      text: `Your verification code is ${code}. It expires in 10 minutes.`
-    });
-
-    res.json({ success: true });
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Your verification code',
+        text: `Your verification code is ${code}. It expires in 10 minutes.`
+      });
+      return res.json({ success: true });
+    } catch (mailErr) {
+      console.error('OTP email send error:', mailErr);
+      if (process.env.OTP_DEBUG === 'true') {
+        // Provide code in response for non-production testing only
+        return res.json({ success: true, debugCode: code });
+      }
+      return res.status(500).json({ error: 'Email delivery failed' });
+    }
   } catch (err) {
     console.error('OTP send error:', err);
     res.status(500).json({ error: 'Failed to send code' });
