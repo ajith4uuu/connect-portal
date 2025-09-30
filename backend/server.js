@@ -65,6 +65,9 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// In-memory OTP store fallback (for local/dev)
+const otpStore = new Map();
+
 // Initialize BigQuery schema
 async function initializeBigQuery() {
   const datasetId = process.env.BQ_DATASET_ID || 'bcc_portal';
