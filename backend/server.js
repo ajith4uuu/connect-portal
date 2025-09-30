@@ -29,6 +29,9 @@ const storage = new Storage({
 });
 const documentAI = new DocumentProcessorServiceClient();
 
+// Trust proxy (required for accurate client IPs behind proxy)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 app.use(compression());
