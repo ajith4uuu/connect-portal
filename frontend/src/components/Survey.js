@@ -592,10 +592,10 @@ function Survey({ onComplete }) {
   return (
     <Card>
       <CardContent>
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+        <Stepper activeStep={activeStep} sx={{ mb: 4 }} alternativeLabel>
           {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
             <Step key={index}>
-              <StepLabel>{index === activeStep ? label : ''}</StepLabel>
+              <StepLabel>{label}</StepLabel>
             </Step>
           ))}
         </Stepper>
