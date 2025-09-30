@@ -40,6 +40,12 @@ function Survey({ onComplete }) {
   const [errors, setErrors] = useState({});
   const [exitDialog, setExitDialog] = useState(false);
 
+  // OTP state
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+
   // Static steps before dynamic questions
   const staticSteps = [
     t('consent_title'),
@@ -56,6 +62,40 @@ function Survey({ onComplete }) {
   useEffect(() => {
     loadSurveyDefinition();
   }, [i18n.language]);
+
+  const sendOtp = async () => {
+    if (!formData.email) return;
+    try {
+      setOtpSending(true);
+      await axios.post(`${API_URL}/api/otp/send`, { email: formData.email, lang: i18n.language });
+      toast.success(t('otp_sent'));
+    } catch (e) {
+      toast.error(t('submission_failed'));
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!formData.email || !otpCode) return;
+    try {
+      setOtpVerifying(true);
+      const r = await axios.post(`${API_URL}/api/otp/verify`, { email: formData.email, code: otpCode });
+      if (r.data?.success) {
+        setOtpVerified(true);
+        setErrors(prev => ({ ...prev, otp: undefined }));
+        toast.success(t('otp_verified'));
+      } else {
+        setOtpVerified(false);
+        setErrors(prev => ({ ...prev, otp: t('otp_invalid') }));
+      }
+    } catch (e) {
+      setOtpVerified(false);
+      setErrors(prev => ({ ...prev, otp: t('otp_invalid') }));
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
 
   const loadSurveyDefinition = async () => {
     try {
@@ -126,6 +166,8 @@ function Survey({ onComplete }) {
         if (!formData.email) newErrors.email = t('required_field');
         else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) {
           newErrors.email = t('invalid_email');
+        } else if (!otpVerified) {
+          newErrors.otp = t('otp_required');
         }
         break;
       case 2: // Privacy
