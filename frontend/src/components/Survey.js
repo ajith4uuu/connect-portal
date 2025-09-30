@@ -595,7 +595,7 @@ function Survey({ onComplete }) {
         <Stepper activeStep={activeStep} sx={{ mb: 4 }} alternativeLabel>
           {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
             <Step key={index}>
-              <StepLabel>{label}</StepLabel>
+              <StepLabel>{index === activeStep ? label : ''}</StepLabel>
             </Step>
           ))}
         </Stepper>
