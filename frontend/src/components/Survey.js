@@ -249,18 +249,38 @@ function Survey({ onComplete }) {
             <Typography variant="h5" gutterBottom>{t('email_title')}</Typography>
             <Typography paragraph dangerouslySetInnerHTML={{ __html: t('email_text') }} />
             <Typography paragraph>{t('privacy_link')}</Typography>
-            
+
             <TextField
               fullWidth
               label={`${t('email_label')} *`}
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => { setFormData({...formData, email: e.target.value}); setOtpVerified(false); }}
               error={!!errors.email}
               helperText={errors.email}
               placeholder={t('email_placeholder')}
               margin="normal"
             />
+
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1, flexWrap: 'wrap' }}>
+              <Button variant="contained" onClick={sendOtp} disabled={!formData.email || otpSending}>
+                {t('send_otp')}
+              </Button>
+              <TextField
+                label={t('otp_label')}
+                placeholder={t('otp_placeholder')}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                size="small"
+                sx={{ width: 160 }}
+                error={!!errors.otp}
+                helperText={errors.otp}
+              />
+              <Button variant="outlined" onClick={verifyOtp} disabled={!otpCode || otpVerifying}>
+                {t('verify_otp')}
+              </Button>
+              {otpVerified && <Alert severity="success" sx={{ ml: 1 }}>{t('otp_verified')}</Alert>}
+            </Box>
           </Box>
         );
         
