@@ -40,11 +40,6 @@ function Survey({ onComplete }) {
   const [errors, setErrors] = useState({});
   const [exitDialog, setExitDialog] = useState(false);
 
-  // OTP state
-  const [otpCode, setOtpCode] = useState('');
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpVerifying, setOtpVerifying] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
 
   // Static steps before dynamic questions
   const staticSteps = [
@@ -63,39 +58,7 @@ function Survey({ onComplete }) {
     loadSurveyDefinition();
   }, [i18n.language]);
 
-  const sendOtp = async () => {
-    if (!formData.email) return;
-    try {
-      setOtpSending(true);
-      await axios.post(`${API_URL}/api/otp/send`, { email: formData.email, lang: i18n.language });
-      toast.success(t('otp_sent'));
-    } catch (e) {
-      toast.error(t('submission_failed'));
-    } finally {
-      setOtpSending(false);
-    }
-  };
 
-  const verifyOtp = async () => {
-    if (!formData.email || !otpCode) return;
-    try {
-      setOtpVerifying(true);
-      const r = await axios.post(`${API_URL}/api/otp/verify`, { email: formData.email, code: otpCode });
-      if (r.data?.success) {
-        setOtpVerified(true);
-        setErrors(prev => ({ ...prev, otp: undefined }));
-        toast.success(t('otp_verified'));
-      } else {
-        setOtpVerified(false);
-        setErrors(prev => ({ ...prev, otp: t('otp_invalid') }));
-      }
-    } catch (e) {
-      setOtpVerified(false);
-      setErrors(prev => ({ ...prev, otp: t('otp_invalid') }));
-    } finally {
-      setOtpVerifying(false);
-    }
-  };
 
   const loadSurveyDefinition = async () => {
     try {
@@ -166,8 +129,6 @@ function Survey({ onComplete }) {
         if (!formData.email) newErrors.email = t('required_field');
         else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) {
           newErrors.email = t('invalid_email');
-        } else if (!otpVerified) {
-          newErrors.otp = t('otp_required');
         }
         break;
       case 2: // Privacy
@@ -297,32 +258,12 @@ function Survey({ onComplete }) {
               label={`${t('email_label')} *`}
               type="email"
               value={formData.email}
-              onChange={(e) => { setFormData({...formData, email: e.target.value}); setOtpVerified(false); }}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               error={!!errors.email}
               helperText={errors.email}
               placeholder={t('email_placeholder')}
               margin="normal"
             />
-
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1, flexWrap: 'wrap' }}>
-              <Button variant="contained" onClick={sendOtp} disabled={!formData.email || otpSending}>
-                {t('send_otp')}
-              </Button>
-              <TextField
-                label={t('otp_label')}
-                placeholder={t('otp_placeholder')}
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value)}
-                size="small"
-                sx={{ width: 160 }}
-                error={!!errors.otp}
-                helperText={errors.otp}
-              />
-              <Button variant="outlined" onClick={verifyOtp} disabled={!otpCode || otpVerifying}>
-                {t('verify_otp')}
-              </Button>
-              {otpVerified && <Alert severity="success" sx={{ ml: 1 }}>{t('otp_verified')}</Alert>}
-            </Box>
           </Box>
         );
         
