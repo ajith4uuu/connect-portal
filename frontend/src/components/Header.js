@@ -21,7 +21,7 @@ function Header() {
           <img
             src="https://progressconnect.ca/wp-content/uploads/2023/10/BCC-PC-Light-Pink-Pantone-250.png"
             alt="BCC Logo"
-            style={{ height: '90px' }}
+            style={{ height: '110px' }}
           />
           <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '0.5px' }}>
             Progress CONNECT
