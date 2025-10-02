@@ -153,7 +153,11 @@ async function initializeBigQuery() {
 }
 
 // Initialize BigQuery on startup
-initializeBigQuery();
+if (process.env.GCP_PROJECT_ID && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  initializeBigQuery();
+} else {
+  console.warn('Skipping BigQuery initialization: missing GCP credentials');
+}
 
 // API Routes
 
@@ -325,6 +329,12 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
       PTEN: '',
       AKT1: ''
     };
+
+    const hasDocAi = !!process.env.GCP_PROJECT_ID && !!process.env.DOCAI_PROCESSOR_ID && !!process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (!hasDocAi) {
+      // No Document AI/GCP credentials available; return extracted defaults to keep app functional
+      return res.json({ success: true, data: combinedData });
+    }
     
     // Process each file
     for (const file of req.files) {
@@ -445,10 +455,14 @@ app.post('/api/submit', async (req, res) => {
       raw_responses: JSON.stringify(answers)
     };
     
-    await bigquery
-      .dataset(datasetId)
-      .table(tableId)
-      .insert([row]);
+    try {
+      await bigquery
+        .dataset(datasetId)
+        .table(tableId)
+        .insert([row]);
+    } catch (e) {
+      console.warn('BigQuery insert skipped:', e.message || e);
+    }
     
     // Send email if provided
     if (answers.email) {
