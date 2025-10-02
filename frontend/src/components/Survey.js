@@ -41,6 +41,13 @@ function Survey({ onComplete }) {
   const [exitDialog, setExitDialog] = useState(false);
   const manualFileInputRef = useRef(null);
 
+  // OTP state
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+
 
   // Static steps before dynamic questions
   const staticSteps = [
@@ -92,6 +99,48 @@ function Survey({ onComplete }) {
     e.target.value = '';
   };
 
+  const sendOtp = async () => {
+    if (!formData.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) {
+      setErrors(prev => ({ ...prev, email: t('invalid_email') }));
+      return;
+    }
+    try {
+      setOtpSending(true);
+      await axios.post(`${API_URL}/api/otp/send`, { email: formData.email, lang: i18n.language });
+      setOtpSent(true);
+      toast.success(t('otp_sent'));
+    } catch (e) {
+      toast.error(t('submission_failed'));
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!otpCode) {
+      setErrors(prev => ({ ...prev, otp: t('required_field') }));
+      return;
+    }
+    try {
+      setOtpVerifying(true);
+      const resp = await axios.post(`${API_URL}/api/otp/verify`, { email: formData.email, code: otpCode });
+      if (resp.data?.success) {
+        setOtpVerified(true);
+        toast.success(t('otp_verified'));
+        setErrors(prev => ({ ...prev, otp: undefined }));
+      } else {
+        setOtpVerified(false);
+        setErrors(prev => ({ ...prev, otp: t('otp_invalid') }));
+      }
+    } catch (e) {
+      setOtpVerified(false);
+      setErrors(prev => ({ ...prev, otp: t('otp_invalid') }));
+      toast.error(t('otp_invalid'));
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
   const handleFileUpload = async (uploadFiles) => {
     setUploading(true);
     const formData = new FormData();
@@ -139,6 +188,7 @@ function Survey({ onComplete }) {
         else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) {
           newErrors.email = t('invalid_email');
         }
+        if (!otpVerified) newErrors.otp = t('otp_required');
         break;
       case 2: // Privacy
         if (!formData.privacy) newErrors.privacy = t('required_field');
@@ -267,12 +317,57 @@ function Survey({ onComplete }) {
               label={`${t('email_label')} *`}
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                // reset OTP state on email change
+                setOtpSent(false);
+                setOtpVerified(false);
+                setOtpCode('');
+              }}
               error={!!errors.email}
               helperText={errors.email}
               placeholder={t('email_placeholder')}
               margin="normal"
             />
+
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+              <Button
+                variant="contained"
+                onClick={sendOtp}
+                disabled={otpSending || !formData.email || !!errors.email}
+                sx={{ borderRadius: '30px' }}
+              >
+                {t('send_otp')}
+              </Button>
+              {otpSent && (
+                <Typography variant="body2" sx={{ color: '#666' }}>{t('otp_sent')}</Typography>
+              )}
+            </Box>
+
+            {otpSent && (
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <TextField
+                  label={t('otp_label')}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  placeholder={t('otp_placeholder')}
+                  error={!!errors.otp}
+                  helperText={errors.otp}
+                  size="small"
+                />
+                <Button
+                  variant="outlined"
+                  onClick={verifyOtp}
+                  disabled={otpVerifying || otpVerified}
+                  sx={{ borderRadius: '30px' }}
+                >
+                  {t('verify_otp')}
+                </Button>
+                {otpVerified && (
+                  <Typography variant="body2" sx={{ color: 'success.main' }}>{t('otp_verified')}</Typography>
+                )}
+              </Box>
+            )}
           </Box>
         );
         
