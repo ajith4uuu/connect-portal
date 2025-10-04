@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 
 function Header() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
 
   const handleLanguageChange = (event) => {
     i18n.changeLanguage(event.target.value);
