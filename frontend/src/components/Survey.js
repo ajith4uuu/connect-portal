@@ -812,7 +812,14 @@ function Survey({ onComplete }) {
             <NavigateNext />
           </IconButton>
         </Box>
-        <Box ref={stepperScrollRef} sx={{ display: 'none' }}>
+        <Box ref={stepperScrollRef} sx={{
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          mb: 2,
+          '::-webkit-scrollbar': { display: 'none' },
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none'
+        }}>
           <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
             {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
               <Step key={index}>
