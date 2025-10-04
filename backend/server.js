@@ -496,13 +496,18 @@ app.post('/api/otp/send', async (req, res) => {
     return res.status(501).json({ error: 'OTP disabled' });
   }
   try {
-    const { email, lang = 'en' } = req.body || {};
+    const rawEmail = (req.body && req.body.email) ? String(req.body.email) : '';
+    const email = rawEmail.trim().toLowerCase();
+    const { lang = 'en' } = req.body || {};
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       return res.status(400).json({ error: 'Invalid email' });
     }
 
     const code = (Math.floor(100000 + Math.random() * 900000)).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    // Always store in memory to guarantee fallback on environments without BigQuery or multi-instance timing issues
+    otpStore.set(email, { code, expiresAt, attempts: 0, used: false });
 
     try {
       const datasetId = process.env.BQ_DATASET_ID || 'bcc_portal';
@@ -516,7 +521,7 @@ app.post('/api/otp/send', async (req, res) => {
       };
       await bigquery.dataset(datasetId).table('otp_codes').insert([otpRow]);
     } catch (e) {
-      otpStore.set(email, { code, expiresAt, attempts: 0, used: false });
+      // ignore; memory fallback already set
     }
 
     try {
@@ -530,7 +535,6 @@ app.post('/api/otp/send', async (req, res) => {
     } catch (mailErr) {
       console.error('OTP email send error:', mailErr);
       if (process.env.OTP_DEBUG === 'true') {
-        // Provide code in response for non-production testing only
         return res.json({ success: true, debugCode: code });
       }
       return res.status(500).json({ error: 'Email delivery failed' });
@@ -547,42 +551,54 @@ app.post('/api/otp/verify', async (req, res) => {
     return res.status(501).json({ error: 'OTP disabled' });
   }
   try {
-    const { email, code } = req.body || {};
+    const rawEmail = (req.body && req.body.email) ? String(req.body.email) : '';
+    const rawCode = (req.body && req.body.code) ? String(req.body.code) : '';
+    const email = rawEmail.trim().toLowerCase();
+    const code = rawCode.replace(/\s+/g, '');
     if (!email || !code) return res.status(400).json({ error: 'Missing email or code' });
 
-    let match = null;
+    let bgReason = '';
     try {
       const datasetId = process.env.BQ_DATASET_ID || 'bcc_portal';
       const projectId = await getProjectIdSafe();
-      const tableFqn = `\`${projectId}.${datasetId}.otp_codes\``;
-      const query = {
-        query: `SELECT email, code, expires_at, used FROM ${tableFqn} WHERE email=@email ORDER BY created_at DESC LIMIT 1`,
-        params: { email }
-      };
-      const [rows] = await bigquery.query(query);
-      if (rows && rows[0]) match = rows[0];
-      if (match && new Date(match.expires_at) < new Date()) return res.status(400).json({ error: 'Code expired' });
-      if (match && match.used) return res.status(400).json({ error: 'Code already used' });
-      if (match && match.code !== code) return res.status(400).json({ error: 'Invalid code' });
-      if (match) {
-        await bigquery.query({
-          query: `UPDATE ${tableFqn} SET used=true WHERE email=@email AND code=@code`,
-          params: { email, code }
-        });
-        return res.json({ success: true });
+      if (projectId) {
+        const tableFqn = `\`${projectId}.${datasetId}.otp_codes\``;
+        const query = {
+          query: `SELECT email, code, expires_at, used FROM ${tableFqn} WHERE email=@email ORDER BY created_at DESC LIMIT 1`,
+          params: { email }
+        };
+        const [rows] = await bigquery.query(query);
+        const match = rows && rows[0] ? rows[0] : null;
+        if (match) {
+          if (new Date(match.expires_at) < new Date()) {
+            bgReason = 'Code expired';
+          } else if (match.used) {
+            bgReason = 'Code already used';
+          } else if (String(match.code) === code) {
+            await bigquery.query({
+              query: `UPDATE ${tableFqn} SET used=true WHERE email=@email AND code=@code`,
+              params: { email, code }
+            });
+            return res.json({ success: true });
+          } else {
+            bgReason = 'Invalid code';
+          }
+        }
       }
     } catch (e) {
-      // fall back to memory
+      // ignore and fall back to memory store
     }
 
     const rec = otpStore.get(email);
-    if (!rec) return res.status(400).json({ error: 'No code found' });
-    if (rec.used) return res.status(400).json({ error: 'Code already used' });
-    if (rec.expiresAt < new Date()) return res.status(400).json({ error: 'Code expired' });
-    if (rec.code !== code) return res.status(400).json({ error: 'Invalid code' });
-    rec.used = true;
-    otpStore.set(email, rec);
-    return res.json({ success: true });
+    if (rec && !rec.used && rec.expiresAt >= new Date() && String(rec.code) === code) {
+      rec.used = true;
+      otpStore.set(email, rec);
+      return res.json({ success: true });
+    }
+
+    // If we reach here, both BigQuery and memory verification failed
+    const errorMsg = bgReason || (rec ? (rec.used ? 'Code already used' : (rec.expiresAt < new Date() ? 'Code expired' : 'Invalid code')) : 'No code found');
+    return res.status(400).json({ error: errorMsg });
   } catch (err) {
     console.error('OTP verify error:', err);
     res.status(500).json({ error: 'Verification failed' });
