@@ -120,13 +120,15 @@ function Survey({ onComplete }) {
   };
 
   const verifyOtp = async () => {
-    if (!otpCode) {
+    const code = (otpCode || '').replace(/\s+/g, '');
+    const email = (formData.email || '').trim().toLowerCase();
+    if (!code) {
       setErrors(prev => ({ ...prev, otp: t('required_field') }));
       return;
     }
     try {
       setOtpVerifying(true);
-      const resp = await axios.post(`${API_URL}/api/otp/verify`, { email: formData.email, code: otpCode });
+      const resp = await axios.post(`${API_URL}/api/otp/verify`, { email, code });
       if (resp.data?.success) {
         setOtpVerified(true);
         toast.success(t('otp_verified'));
@@ -136,9 +138,10 @@ function Survey({ onComplete }) {
         setErrors(prev => ({ ...prev, otp: t('otp_invalid') }));
       }
     } catch (e) {
+      const msg = e?.response?.data?.error || t('otp_invalid');
       setOtpVerified(false);
-      setErrors(prev => ({ ...prev, otp: t('otp_invalid') }));
-      toast.error(t('otp_invalid'));
+      setErrors(prev => ({ ...prev, otp: msg }));
+      toast.error(msg);
     } finally {
       setOtpVerifying(false);
     }
