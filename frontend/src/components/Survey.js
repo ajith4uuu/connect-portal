@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Box, Card, CardContent, Stepper, Step, StepLabel,
   Button, TextField, Radio, RadioGroup, FormControlLabel,
   FormControl, FormLabel, Select, MenuItem, Checkbox,
-  FormGroup, Typography, LinearProgress, Alert,
+  FormGroup, Typography, LinearProgress,
   Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import { CloudUpload, NavigateNext, NavigateBefore } from '@mui/icons-material';
@@ -64,18 +64,18 @@ function Survey({ onComplete }) {
 
   useEffect(() => {
     loadSurveyDefinition();
-  }, [i18n.language]);
+  }, [loadSurveyDefinition]);
 
 
 
-  const loadSurveyDefinition = async () => {
+  const loadSurveyDefinition = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/api/survey/${i18n.language}`);
       setSurveyDefinition(response.data);
     } catch (error) {
       toast.error(t('error_loading_survey'));
     }
-  };
+  }, [i18n.language, t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
