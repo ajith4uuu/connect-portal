@@ -13,6 +13,12 @@ RUN npm ci --only=production
 # Copy application files
 COPY . .
 
+# Use .env.production if present
+RUN if [ -f .env.production ]; then cp .env.production .env; fi
+
+# Set production environment
+ENV NODE_ENV=production
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
