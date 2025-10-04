@@ -101,17 +101,19 @@ function Survey({ onComplete }) {
   };
 
   const sendOtp = async () => {
-    if (!formData.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) {
+    const email = (formData.email || '').trim().toLowerCase();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       setErrors(prev => ({ ...prev, email: t('invalid_email') }));
       return;
     }
     try {
       setOtpSending(true);
-      await axios.post(`${API_URL}/api/otp/send`, { email: formData.email, lang: i18n.language });
+      await axios.post(`${API_URL}/api/otp/send`, { email, lang: i18n.language });
       setOtpSent(true);
       toast.success(t('otp_sent'));
     } catch (e) {
-      toast.error(t('submission_failed'));
+      const msg = e?.response?.data?.error || t('submission_failed');
+      toast.error(msg);
     } finally {
       setOtpSending(false);
     }
