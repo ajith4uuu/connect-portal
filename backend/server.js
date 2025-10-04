@@ -20,13 +20,9 @@ const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getP
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Initialize Google Cloud clients
-const bigquery = new BigQuery({
-  projectId: process.env.GCP_PROJECT_ID
-});
-const storage = new Storage({
-  projectId: process.env.GCP_PROJECT_ID
-});
+// Initialize Google Cloud clients (use Application Default Credentials on Cloud Run)
+const bigquery = new BigQuery();
+const storage = new Storage();
 const documentAI = new DocumentProcessorServiceClient();
 
 // Trust proxy (required for accurate client IPs behind proxy)
@@ -70,6 +66,18 @@ const transporter = nodemailer.createTransport({
 
 // In-memory OTP store fallback (for local/dev)
 const otpStore = new Map();
+
+// Resolve GCP project ID when running on Cloud Run (ADC) or locally
+let __cachedProjectId = null;
+async function getProjectIdSafe() {
+  if (__cachedProjectId) return __cachedProjectId;
+  try {
+    __cachedProjectId = await bigquery.getProjectId();
+    return __cachedProjectId;
+  } catch (e) {
+    return process.env.GCP_PROJECT_ID || '';
+  }
+}
 
 // Initialize BigQuery schema
 async function initializeBigQuery() {
@@ -152,12 +160,8 @@ async function initializeBigQuery() {
   }
 }
 
-// Initialize BigQuery on startup
-if (process.env.GCP_PROJECT_ID && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-  initializeBigQuery();
-} else {
-  console.warn('Skipping BigQuery initialization: missing GCP credentials');
-}
+// Initialize BigQuery on startup (let ADC provide credentials on Cloud Run)
+initializeBigQuery();
 
 // API Routes
 
@@ -549,8 +553,10 @@ app.post('/api/otp/verify', async (req, res) => {
     let match = null;
     try {
       const datasetId = process.env.BQ_DATASET_ID || 'bcc_portal';
+      const projectId = await getProjectIdSafe();
+      const tableFqn = `\`${projectId}.${datasetId}.otp_codes\``;
       const query = {
-        query: `SELECT email, code, expires_at, used FROM \`${bigquery.projectId}.${datasetId}.otp_codes\` WHERE email=@email ORDER BY created_at DESC LIMIT 1`,
+        query: `SELECT email, code, expires_at, used FROM ${tableFqn} WHERE email=@email ORDER BY created_at DESC LIMIT 1`,
         params: { email }
       };
       const [rows] = await bigquery.query(query);
@@ -560,7 +566,7 @@ app.post('/api/otp/verify', async (req, res) => {
       if (match && match.code !== code) return res.status(400).json({ error: 'Invalid code' });
       if (match) {
         await bigquery.query({
-          query: `UPDATE \`${bigquery.projectId}.${datasetId}.otp_codes\` SET used=true WHERE email=@email AND code=@code`,
+          query: `UPDATE ${tableFqn} SET used=true WHERE email=@email AND code=@code`,
           params: { email, code }
         });
         return res.json({ success: true });
