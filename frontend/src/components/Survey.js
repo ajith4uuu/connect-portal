@@ -165,13 +165,35 @@ function Survey({ onComplete }) {
       const payload = response.data?.data || response.data || {};
       setExtractedData(payload);
 
-      // Prefill form with extracted data
+      // Normalize stage to the base option label for the select (e.g., "Stage II TNBC" -> "Stage II")
+      const normalizedStage = (() => {
+        const s = String(payload.stage || '').trim();
+        if (/^Stage\s+(0|I{1,3}|IV)\b/i.test(s)) {
+          const m = s.match(/^(Stage\s+(?:0|I{1,3}|IV))/i);
+          return m ? m[1].replace(/\s+/g, ' ') : '';
+        }
+        if (/DCIS/i.test(s)) return 'DCIS / Stage 0';
+        return s;
+      })();
+
+      // Prefill form with extracted data, mapping to dynamic fields when possible
       setFormData(prev => ({
         ...prev,
         age: payload.age || prev.age,
         province: payload.province || prev.province,
         country: payload.country || prev.country,
-        stage: payload.stage || prev.stage
+        stage: normalizedStage || prev.stage,
+        ERPR: payload.ERPR || prev.ERPR,
+        HER2: payload.HER2 || prev.HER2,
+        luminal: payload.luminal || prev.luminal,
+        BRCA: payload.BRCA || prev.BRCA,
+        PIK3CA: payload.PIK3CA || prev.PIK3CA,
+        ESR1: payload.ESR1 || prev.ESR1,
+        PDL1: payload.PDL1 || prev.PDL1,
+        MSI: payload.MSI || prev.MSI,
+        Ki67: payload.Ki67 || prev.Ki67,
+        PTEN: payload.PTEN || prev.PTEN,
+        AKT1: payload.AKT1 || prev.AKT1
       }));
 
       toast.success(t('upload_successful'));
