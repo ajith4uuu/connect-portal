@@ -78,6 +78,7 @@ const resources = {
       analysis_title: "Report Analysis",
       analysis_text: "Based on your report, we extracted the following data:",
       extracted_from_report: "Extracted from report",
+      entered_manually: "Entered manually",
       
       // Stage selection
       stage_select_label: "Select Your Cancer Stage",
