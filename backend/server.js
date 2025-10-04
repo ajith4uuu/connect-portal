@@ -534,8 +534,8 @@ app.post('/api/otp/send', async (req, res) => {
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: email,
-        subject: 'Your verification code',
-        text: `Your verification code is ${code}. It expires in 10 minutes.`
+        subject: 'Your one time access code (OTP)',
+        text: `Please use this as your one time access code (OTP) to enter your account on Progress Connect Registry that is linked to your email address.\n\nOTP: ${code}\nThis code expires in 10 minutes.`
       });
       return res.json({ success: true });
     } catch (mailErr) {
