@@ -146,6 +146,7 @@ function App() {
               pauseOnHover
             />
           </div>
+          <Footer />
         </Router>
       </ThemeProvider>
     </I18nextProvider>
