@@ -42,6 +42,13 @@ function Survey({ onComplete }) {
   const [exitDialog, setExitDialog] = useState(false);
   const manualFileInputRef = useRef(null);
 
+  // Track field origins (ai or user)
+  const [fieldOrigins, setFieldOrigins] = useState({});
+
+  // Stepper scrolling refs
+  const stepperScrollRef = useRef(null);
+  const stepRefs = useRef([]);
+
   // OTP state
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -196,6 +203,11 @@ function Survey({ onComplete }) {
         AKT1: payload.AKT1 || prev.AKT1
       }));
 
+      const aiKeys = ['age','province','country','stage','ERPR','HER2','luminal','BRCA','PIK3CA','ESR1','PDL1','MSI','Ki67','PTEN','AKT1'];
+      const newOrigins = {};
+      aiKeys.forEach(k => { if (payload[k]) newOrigins[k] = 'ai'; });
+      setFieldOrigins(prev => ({ ...prev, ...newOrigins }));
+
       toast.success(t('upload_successful'));
     } catch (error) {
       toast.error(t('upload_error'));
@@ -311,6 +323,24 @@ function Survey({ onComplete }) {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Scroll active step into view
+  useEffect(() => {
+    const container = stepperScrollRef.current;
+    const el = stepRefs.current[activeStep];
+    if (container && el) {
+      const left = el.offsetLeft - container.clientWidth / 2 + el.clientWidth / 2;
+      container.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    }
+  }, [activeStep, surveyDefinition.length]);
+
+  const originTag = (id) => {
+    const isAi = fieldOrigins[id] === 'ai';
+    const hasVal = !!formData[id];
+    if (isAi) return (<Typography variant="caption" sx={{ color: '#53868b' }}>{t('extracted_from_report')}</Typography>);
+    if (hasVal) return (<Typography variant="caption" sx={{ color: '#666' }}>{t('entered_manually')}</Typography>);
+    return null;
   };
 
   const renderStepContent = () => {
@@ -494,28 +524,30 @@ function Survey({ onComplete }) {
               label={`${t('age_label')} *`}
               type="number"
               value={formData.age}
-              onChange={(e) => setFormData({...formData, age: e.target.value})}
+              onChange={(e) => { setFormData({...formData, age: e.target.value}); setFieldOrigins(prev => ({ ...prev, age: 'user' })); }}
               error={!!errors.age}
               helperText={errors.age || (extractedData.age && t('extracted_from_report'))}
               margin="normal"
               InputProps={{ inputProps: { min: 18, max: 120 } }}
             />
+            {originTag('age')}
             
             <TextField
               fullWidth
               label={`${t('province_label')} *`}
               value={formData.province}
-              onChange={(e) => setFormData({...formData, province: e.target.value})}
+              onChange={(e) => { setFormData({...formData, province: e.target.value}); setFieldOrigins(prev => ({ ...prev, province: 'user' })); }}
               error={!!errors.province}
               helperText={errors.province || (extractedData.province && t('extracted_from_report'))}
               placeholder={t('province_placeholder')}
               margin="normal"
             />
+            {originTag('province')}
             
             <FormControl fullWidth margin="normal" error={!!errors.country}>
               <Select
                 value={formData.country}
-                onChange={(e) => setFormData({...formData, country: e.target.value})}
+                onChange={(e) => { setFormData({...formData, country: e.target.value}); setFieldOrigins(prev => ({ ...prev, country: 'user' })); }}
                 displayEmpty
               >
                 <MenuItem value="">— {t('select_country')} —</MenuItem>
@@ -524,6 +556,7 @@ function Survey({ onComplete }) {
                 <MenuItem value="Other">{t('other')}</MenuItem>
               </Select>
             </FormControl>
+            {originTag('country')}
           </Box>
         );
         
@@ -570,7 +603,7 @@ function Survey({ onComplete }) {
               <FormLabel component="legend">{`${t('cancer_type_question')} *`}</FormLabel>
               <RadioGroup
                 value={formData.cancerType}
-                onChange={(e) => setFormData({ ...formData, cancerType: e.target.value })}
+                onChange={(e) => { setFormData({ ...formData, cancerType: e.target.value }); setFieldOrigins(prev => ({ ...prev, cancerType: 'user' })); } }
               >
                 <FormControlLabel value={t('cancer_type_ductal')} control={<Radio />} label={t('cancer_type_ductal')} />
                 <FormControlLabel value={t('cancer_type_lobular')} control={<Radio />} label={t('cancer_type_lobular')} />
@@ -687,6 +720,7 @@ function Survey({ onComplete }) {
                             newValues = newValues.filter(v => v !== option);
                           }
                           setFormData({...formData, [question.id]: newValues});
+                          setFieldOrigins(prev => ({ ...prev, [question.id]: 'user' }));
                         }}
                       />
                     }
@@ -713,6 +747,7 @@ function Survey({ onComplete }) {
               placeholder={question.placeholder}
               margin="normal"
             />
+            {originTag(question.id)}
           </Box>
         );
     }
@@ -744,9 +779,8 @@ function Survey({ onComplete }) {
             
             return (
               <Typography key={q.id}>
-                <strong>{q.title}:</strong> {
-                  Array.isArray(value) ? value.join(', ') : value
-                }
+                <strong>{q.title}:</strong> {Array.isArray(value) ? value.join(', ') : value}
+                {fieldOrigins[q.id] === 'ai' ? ` (${t('extracted_from_report')})` : ` (${t('entered_manually')})`}
               </Typography>
             );
           })}
@@ -767,13 +801,19 @@ function Survey({ onComplete }) {
   return (
     <Card>
       <CardContent>
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }} alternativeLabel>
-          {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
-            <Step key={index}>
-              <StepLabel>{index === activeStep ? label : ''}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+        <Box ref={stepperScrollRef} sx={{ overflowX: 'auto', overflowY: 'hidden', mb: 4 }}>
+          <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
+            {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
+              <Step key={index}>
+                <StepLabel>
+                  <span ref={(el) => { stepRefs.current[index] = el; }}>
+                    {index === activeStep ? label : ''}
+                  </span>
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </Box>
         
         {renderStepContent()}
         
