@@ -9,6 +9,7 @@ import i18n from './i18n';
 import Survey from './components/Survey';
 import ThankYou from './components/ThankYou';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import './App.css';
 
 // BCC Theme
