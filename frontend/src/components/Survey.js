@@ -31,6 +31,7 @@ function Survey({ onComplete }) {
     province: '',
     country: '',
     stage: '',
+    cancerType: '',
     stageConfirm: ''
   });
   const [extractedData, setExtractedData] = useState({});
@@ -56,6 +57,7 @@ function Survey({ onComplete }) {
     t('privacy_title'),
     t('report_title'),
     t('analysis_title'),
+    t('cancer_type_step'),
     t('stage_title')
   ];
 
@@ -204,7 +206,10 @@ function Survey({ onComplete }) {
       case 4: // Stage selection
         if (!formData.stage) newErrors.stage = t('required_field');
         break;
-      case 5: // Stage confirmation
+      case 5: // Cancer type
+        if (!formData.cancerType) newErrors.cancerType = t('required_field');
+        break;
+      case 6: // Stage confirmation
         if (!formData.stageConfirm) newErrors.stageConfirm = t('required_field');
         break;
       default:
@@ -236,7 +241,7 @@ function Survey({ onComplete }) {
       setExitDialog(true);
       return;
     }
-    if (activeStep === 5 && formData.stageConfirm === 'no') {
+    if (activeStep === 6 && formData.stageConfirm === 'no') {
       setActiveStep(4); // Go back to stage selection
       return;
     }
@@ -530,19 +535,38 @@ function Survey({ onComplete }) {
           </Box>
         );
         
-      case 5: // Stage confirmation
+      case 5: // Cancer type
+        return (
+          <Box>
+            <Typography variant="h5" gutterBottom>{t('cancer_type_title')}</Typography>
+            <FormControl component="fieldset" error={!!errors.cancerType}>
+              <FormLabel component="legend">{`${t('cancer_type_question')} *`}</FormLabel>
+              <RadioGroup
+                value={formData.cancerType}
+                onChange={(e) => setFormData({ ...formData, cancerType: e.target.value })}
+              >
+                <FormControlLabel value={t('cancer_type_ductal')} control={<Radio />} label={t('cancer_type_ductal')} />
+                <FormControlLabel value={t('cancer_type_lobular')} control={<Radio />} label={t('cancer_type_lobular')} />
+                <FormControlLabel value={t('cancer_type_sarcoma')} control={<Radio />} label={t('cancer_type_sarcoma')} />
+                <FormControlLabel value={t('cancer_type_inflammatory')} control={<Radio />} label={t('cancer_type_inflammatory')} />
+                <FormControlLabel value={t('cancer_type_unknown')} control={<Radio />} label={t('cancer_type_unknown')} />
+              </RadioGroup>
+            </FormControl>
+          </Box>
+        );
+      case 6: // Stage confirmation
         return (
           <Box>
             <Typography variant="h5" gutterBottom>{t('stage_title')}</Typography>
-            
+
             <Box sx={{ bgcolor: '#f8d7e4', p: 2, borderLeft: '4px solid #e5317a', mb: 3, textAlign: 'center' }}>
               <Typography variant="h6">
                 {t('stage_selected_text')} <strong>{formData.stage}</strong>
               </Typography>
             </Box>
-            
+
             <Typography paragraph dangerouslySetInnerHTML={{ __html: t('stage_text') }} />
-            
+
             <FormControl component="fieldset" error={!!errors.stageConfirm}>
               <FormLabel component="legend">{t('stage_confirm_label')} *</FormLabel>
               <RadioGroup
@@ -685,7 +709,8 @@ function Survey({ onComplete }) {
           <Typography><strong>{t('age_label')}:</strong> {formData.age}</Typography>
           <Typography><strong>{t('province_label')}:</strong> {formData.province}</Typography>
           <Typography><strong>{t('country_label')}:</strong> {formData.country}</Typography>
-          
+          <Typography><strong>{t('cancer_type_title')}:</strong> {formData.cancerType || t('not_specified')}</Typography>
+
           {surveyDefinition.map(q => {
             const value = formData[q.id];
             if (!value) return null;

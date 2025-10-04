@@ -95,7 +95,17 @@ const resources = {
       stage_confirm_label: "Is this correct?",
       proceed: "proceed",
       let_me_change: "let me change",
-      
+
+      // Cancer type
+      cancer_type_step: "Cancer Type",
+      cancer_type_title: "Cancer Type",
+      cancer_type_question: "What cancer type was your breast cancer?",
+      cancer_type_ductal: "Ductal carcinoma",
+      cancer_type_lobular: "Lobular carcinoma",
+      cancer_type_sarcoma: "Sarcoma",
+      cancer_type_inflammatory: "Inflammatory",
+      cancer_type_unknown: "Don’t know",
+
       // Review
       review_title: "Review & Submit",
       your_responses: "Your Responses",
@@ -218,7 +228,17 @@ const resources = {
       stage_confirm_label: "Est-ce correct?",
       proceed: "procéder",
       let_me_change: "laissez-moi changer",
-      
+
+      // Cancer type
+      cancer_type_step: "Type de cancer",
+      cancer_type_title: "Type de cancer",
+      cancer_type_question: "Quel type de cancer était votre cancer du sein?",
+      cancer_type_ductal: "Carcinome canalaire",
+      cancer_type_lobular: "Carcinome lobulaire",
+      cancer_type_sarcoma: "Sarcome",
+      cancer_type_inflammatory: "Inflammatoire",
+      cancer_type_unknown: "Je ne sais pas",
+
       // Review
       review_title: "Vérifier et soumettre",
       your_responses: "Vos réponses",
