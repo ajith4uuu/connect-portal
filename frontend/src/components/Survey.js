@@ -668,7 +668,7 @@ function Survey({ onComplete }) {
               <FormLabel>{question.title}</FormLabel>
               <Select
                 value={value}
-                onChange={(e) => setFormData({...formData, [question.id]: e.target.value})}
+                onChange={(e) => { setFormData({...formData, [question.id]: e.target.value}); setFieldOrigins(prev => ({ ...prev, [question.id]: 'user' })); }}
                 displayEmpty
               >
                 <MenuItem value="">— {t('select')} —</MenuItem>
@@ -677,6 +677,7 @@ function Survey({ onComplete }) {
                 ))}
               </Select>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
+              {originTag(question.id)}
             </FormControl>
           </Box>
         );
@@ -688,13 +689,14 @@ function Survey({ onComplete }) {
               <FormLabel>{question.title}</FormLabel>
               <RadioGroup
                 value={value}
-                onChange={(e) => setFormData({...formData, [question.id]: e.target.value})}
+                onChange={(e) => { setFormData({...formData, [question.id]: e.target.value}); setFieldOrigins(prev => ({ ...prev, [question.id]: 'user' })); }}
               >
                 {question.options?.map((option, idx) => (
                   <FormControlLabel key={idx} value={option} control={<Radio />} label={option} />
                 ))}
               </RadioGroup>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
+              {originTag(question.id)}
             </FormControl>
           </Box>
         );
@@ -729,6 +731,7 @@ function Survey({ onComplete }) {
                 ))}
               </FormGroup>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
+              {originTag(question.id)}
             </FormControl>
           </Box>
         );
@@ -741,7 +744,7 @@ function Survey({ onComplete }) {
               label={question.title}
               type={question.type || 'text'}
               value={value}
-              onChange={(e) => setFormData({...formData, [question.id]: e.target.value})}
+              onChange={(e) => { setFormData({...formData, [question.id]: e.target.value}); setFieldOrigins(prev => ({ ...prev, [question.id]: 'user' })); }}
               error={!!error}
               helperText={error}
               placeholder={question.placeholder}
