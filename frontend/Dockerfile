@@ -3,9 +3,22 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Build-time args for CRA envs (optional)
+ARG REACT_APP_API_URL
+ARG REACT_APP_DOC_API_URL
+ARG REACT_APP_I18N_DEBUG
+
+# Export to env so react-scripts can inline them
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+ENV REACT_APP_DOC_API_URL=${REACT_APP_DOC_API_URL}
+ENV REACT_APP_I18N_DEBUG=${REACT_APP_I18N_DEBUG}
+
 # Install dependencies (need dev deps for CRA build)
 COPY package*.json ./
 RUN npm ci
+
+# Copy env file (picked up by CRA in production builds)
+COPY .env.production ./.env.production
 
 # Copy source
 COPY public/ ./public/
