@@ -62,12 +62,7 @@ function Survey({ onComplete }) {
   // Total steps calculation
   const totalSteps = staticSteps.length + surveyDefinition.length + 1; // +1 for review
 
-  useEffect(() => {
-    loadSurveyDefinition();
-  }, [loadSurveyDefinition]);
-
-
-
+  // Define before useEffect to satisfy eslint no-use-before-define
   const loadSurveyDefinition = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/api/survey/${i18n.language}`);
@@ -76,6 +71,10 @@ function Survey({ onComplete }) {
       toast.error(t('error_loading_survey'));
     }
   }, [i18n.language, t]);
+
+  useEffect(() => {
+    loadSurveyDefinition();
+  }, [loadSurveyDefinition]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
