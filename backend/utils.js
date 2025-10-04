@@ -50,10 +50,10 @@ function extractDataFromText(txt) {
   let province = t.not_available;
   const provincePatterns = [
     /Province[:\s-]*([A-Z]{2})/i,
-    /Province\/State[:\s-]*(\w+)/i,
-    /Location[:\s-]*(\w+\s?\w+)/i,
-    /(AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT)/i,
-    /(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)/i
+    /Province\/State[:\s-]*([A-Za-z]{2})/i,
+    /Location[:\s-]*([A-Za-z]{2,})/i,
+    /\b(AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT)\b/,
+    /\b(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)\b/
   ];
   
   for (const pattern of provincePatterns) {
@@ -122,7 +122,7 @@ function extractDataFromText(txt) {
     /ER[:\s-]*(Positive|Negative|Pos|Neg|\+|\-)/i
   ];
   const prTests = [
-    /(Progesterone|PR)[-\s]*(receptor)?[:\s-]*(Positive|Negative|Pos|Neg|Reactive|Non[- ]reactive)/i,
+    /(Progesterone|PR|PgR)[-\s]*(receptor)?[:\s-]*(Positive|Negative|Pos|Neg|Reactive|Non[- ]reactive)/i,
     /PR[:\s-]*(Positive|Negative|Pos|Neg|\+|\-)/i
   ];
   
@@ -540,9 +540,38 @@ function getPdfLink(userStage, resp) {
   return PDF_MAPPING[baseStage] || '';
 }
 
+// Parse report/addendum/collection dates to help prefer most recent values when merging multiple uploads
+function parseReportDate(txt) {
+  const datePatterns = [
+    /Report\s*Date[:\s-]*([0-9]{1,2}[\/\-][0-9]{1,2}[\/\-][0-9]{2,4})/i,
+    /Date\s*Received[:\s-]*([0-9]{1,2}[\/\-][0-9]{1,2}[\/\-][0-9]{2,4})/i,
+    /Date\s*of\s*Collection[:\s-]*([0-9]{1,2}[\/\-][0-9]{1,2}[\/\-][0-9]{2,4})/i,
+    /Addendum\s*Sign[- ]Out\s*-?\s*([0-9]{1,2}[\/\-][0-9]{1,2}[\/\-][0-9]{2,4})/i
+  ];
+  for (const re of datePatterns) {
+    const m = txt.match(re);
+    if (m && m[1]) {
+      const ds = m[1].trim();
+      const parts = ds.split(/[\/\-]/).map(Number);
+      let dt = null;
+      if (parts.length === 3) {
+        const [a,b,c] = parts;
+        const y = c < 100 ? 2000 + c : c;
+        dt = new Date(y, a - 1, b);
+        if (isNaN(dt.getTime())) dt = new Date(y, b - 1, a);
+      } else {
+        dt = new Date(ds);
+      }
+      if (!isNaN(dt.getTime())) return dt;
+    }
+  }
+  return null;
+}
+
 module.exports = {
   extractDataFromText,
   calculateStageFromBiomarkers,
   computePackages,
-  getPdfLink
+  getPdfLink,
+  parseReportDate
 };
