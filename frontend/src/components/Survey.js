@@ -572,7 +572,7 @@ function Survey({ onComplete }) {
     }
   };
 
-  const renderDynamicQuestion = (question) => {
+  function renderDynamicQuestion(question) {
     const value = formData[question.id] || '';
     const error = errors[question.id];
     
@@ -667,7 +667,7 @@ function Survey({ onComplete }) {
     }
   };
 
-  const renderReview = () => {
+  function renderReview() {
     return (
       <Box>
         <Typography variant="h5" gutterBottom>{t('review_title')}</Typography>
