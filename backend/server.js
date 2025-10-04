@@ -15,7 +15,7 @@ const nodemailer = require('nodemailer');
 const { VertexAI } = require('@google-cloud/aiplatform');
 
 const translations = require('./translations');
-const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink } = require('./utils');
+const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, parseReportDate } = require('./utils');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -333,6 +333,7 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
       PTEN: '',
       AKT1: ''
     };
+    const fieldTimestamps = {};
 
     const projectId = await getProjectIdSafe();
     const hasDocAi = !!process.env.DOCAI_PROCESSOR_ID && !!projectId;
@@ -371,11 +372,17 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
 
         // Extract data from text
         const fileData = extractDataFromText(text);
+        const fileDate = parseReportDate(text) || new Date();
 
-        // Merge with combined data
+        // Merge with combined data, preferring latest per-field
         for (const key in fileData) {
-          if (fileData[key] && fileData[key] !== t.not_available) {
-            combinedData[key] = fileData[key];
+          const val = fileData[key];
+          if (val && val !== t.not_available) {
+            const prevTs = fieldTimestamps[key];
+            if (!prevTs || fileDate >= prevTs) {
+              combinedData[key] = val;
+              fieldTimestamps[key] = fileDate;
+            }
           }
         }
       } catch (docError) {
