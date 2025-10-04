@@ -5,7 +5,7 @@ import {
   Box, Card, CardContent, Stepper, Step, StepLabel,
   Button, TextField, Radio, RadioGroup, FormControlLabel,
   FormControl, FormLabel, Select, MenuItem, Checkbox,
-  FormGroup, Typography, LinearProgress,
+  FormGroup, Typography, LinearProgress, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import { CloudUpload, NavigateNext, NavigateBefore } from '@mui/icons-material';
@@ -804,7 +804,15 @@ function Survey({ onComplete }) {
   return (
     <Card>
       <CardContent>
-        <Box ref={stepperScrollRef} sx={{ overflowX: 'auto', overflowY: 'hidden', mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <IconButton onClick={handleBack} disabled={activeStep === 0} aria-label={t('prev_text')} sx={{ color: '#53868b' }}>
+            <NavigateBefore />
+          </IconButton>
+          <IconButton onClick={handleNext} disabled={submitting} aria-label={t('next_text')} sx={{ color: '#53868b' }}>
+            <NavigateNext />
+          </IconButton>
+        </Box>
+        <Box ref={stepperScrollRef} sx={{ display: 'none' }}>
           <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
             {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
               <Step key={index}>
