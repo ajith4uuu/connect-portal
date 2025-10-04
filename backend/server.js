@@ -334,29 +334,28 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
       AKT1: ''
     };
 
-    const hasDocAi = !!process.env.GCP_PROJECT_ID && !!process.env.DOCAI_PROCESSOR_ID && !!process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    const projectId = await getProjectIdSafe();
+    const hasDocAi = !!process.env.DOCAI_PROCESSOR_ID && !!projectId;
     if (!hasDocAi) {
-      // No Document AI/GCP credentials available; return extracted defaults to keep app functional
+      console.warn('Document AI disabled: missing processor or project id.');
       return res.json({ success: true, data: combinedData });
     }
-    
+
     // Process each file
     for (const file of req.files) {
       const fileName = `reports/${Date.now()}_${file.originalname}`;
       const blob = bucket.file(fileName);
-      
+
       // Upload to GCS
       await blob.save(file.buffer, {
         metadata: { contentType: file.mimetype }
       });
-      
+
       // Process with Document AI
-      const projectId = process.env.GCP_PROJECT_ID;
       const location = process.env.DOCAI_LOCATION || 'us';
       const processorId = process.env.DOCAI_PROCESSOR_ID;
-      
       const name = `projects/${projectId}/locations/${location}/processors/${processorId}`;
-      
+
       const request = {
         name,
         rawDocument: {
@@ -364,15 +363,15 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
           mimeType: file.mimetype
         }
       };
-      
+
       try {
         const [result] = await documentAI.processDocument(request);
         const { document } = result;
-        const text = document.text;
-        
+        const text = document.text || '';
+
         // Extract data from text
         const fileData = extractDataFromText(text);
-        
+
         // Merge with combined data
         for (const key in fileData) {
           if (fileData[key] && fileData[key] !== t.not_available) {
