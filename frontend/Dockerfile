@@ -31,8 +31,8 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
-# Add tools for env substitution
-RUN apk add --no-cache bash gettext
+# Add tools and CA certificates for HTTPS upstream proxy
+RUN apk add --no-cache bash gettext ca-certificates
 
 # Copy nginx config as a template; we'll envsubst $API_URL at runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf.template
