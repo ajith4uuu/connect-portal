@@ -115,33 +115,46 @@ function extractDataFromText(txt) {
     stage = stageMap[stage] || stage;
   }
   
-  // ER/PR EXTRACTION
+  // ER/PR EXTRACTION (robust to formats like "Estrogen receptor (ER): NEGATIVE, 0% nuclear staining")
   let ERPR = t.not_available;
   const erTests = [
-    /(Estrogen|ER)[-\s]*(receptor)?[:\s-]*(Positive|Negative|Pos|Neg|Reactive|Non[- ]reactive)/i,
-    /ER[:\s-]*(Positive|Negative|Pos|Neg|\+|\-)/i
+    /(Estrogen\s*receptor\s*\(?(?:ER)?\)?\s*[:\-]\s*)(Positive|Negative|Pos|Neg|Reactive|Non[- ]reactive)/i,
+    /(Estrogen|ER)[-\s]*(receptor)?\s*\(?.*?\)?\s*[:\-]\s*(Positive|Negative|Pos|Neg|Reactive|Non[- ]reactive)/i,
+    /\bER\b\s*[:\-]\s*(Positive|Negative|Pos|Neg|\+|\-)/i
   ];
   const prTests = [
-    /(Progesterone|PR|PgR)[-\s]*(receptor)?[:\s-]*(Positive|Negative|Pos|Neg|Reactive|Non[- ]reactive)/i,
-    /PR[:\s-]*(Positive|Negative|Pos|Neg|\+|\-)/i
+    /(Progesterone\s*receptor|PgR|PR)\s*\(?.*?\)?\s*[:\-]\s*(Positive|Negative|Pos|Neg|Reactive|Non[- ]reactive)/i,
+    /(Progesterone|PR|PgR)[-\s]*(receptor)?\s*\(?.*?\)?\s*[:\-]\s*(Positive|Negative|Pos|Neg|Reactive|Non[- ]reactive)/i,
+    /\bPR\b\s*[:\-]\s*(Positive|Negative|Pos|Neg|\+|\-)/i
   ];
-  
+
   let erPos = null, prPos = null;
   for (const re of erTests) {
     const m = txt.match(re);
     if (m) {
-      erPos = /pos|reactive|\+/i.test(m[3] || m[1]);
-      break;
+      const token = (m[2] || m[3] || '').toString();
+      erPos = /pos|reactive|\+/i.test(token) ? true : /neg|non[- ]reactive|0%/i.test(token) ? false : null;
+      if (erPos !== null) break;
     }
+  }
+  // As a fallback, treat explicit "0% nuclear staining" near ER as negative
+  if (erPos === null) {
+    const nearEr = /Estrogen[^\n]{0,80}?0%\s*nuclear\s*stain/i.test(txt);
+    if (nearEr) erPos = false;
   }
   for (const re of prTests) {
     const m = txt.match(re);
     if (m) {
-      prPos = /pos|reactive|\+/i.test(m[3] || m[1]);
-      break;
+      const token = (m[2] || m[3] || '').toString();
+      prPos = /pos|reactive|\+/i.test(token) ? true : /neg|non[- ]reactive|0%/i.test(token) ? false : null;
+      if (prPos !== null) break;
     }
   }
-  
+  if (prPos === null) {
+    const nearPr = /(Progesterone|PgR|PR)[^\n]{0,80}?0%\s*nuclear\s*stain/i.test(txt);
+    if (nearPr) prPos = false;
+  }
+
   if (erPos !== null && prPos !== null) {
     ERPR = `${erPos ? 'ER+' : 'ER–'} & ${prPos ? 'PR+' : 'PR–'}`;
   }
@@ -189,24 +202,25 @@ function extractDataFromText(txt) {
     }
   }
 
-  // BRCA EXTRACTION
+  // BRCA EXTRACTION (support separate reports)
   let BRCA = t.not_available;
   const brcaPatterns = [
-    /BRCA[12][:\s-]*(Positive|Negative|Mutation|Wild[-\s]?type|Not\s+tested|\+|\-)/i,
+    /BRCA[\s-]*1[^A-Za-z0-9]*(Positive|Negative|Mutation|Wild[-\s]?type|Not\s+tested|\+|\-)/i,
+    /BRCA[\s-]*2[^A-Za-z0-9]*(Positive|Negative|Mutation|Wild[-\s]?type|Not\s+tested|\+|\-)/i,
     /BRCA[:\s-]*(1|2)[:\s-]*(Positive|Negative|Mutation|Wild[-\s]?type|\+|\-)/i,
     /Genetic.*?BRCA[12]?[:\s-]*(Positive|Negative|Mutation|Present|Absent)/i
   ];
-  
+
   for (const pattern of brcaPatterns) {
     const match = txt.match(pattern);
     if (match) {
-      if (/positive|mutation|present|\+/i.test(match[1] || match[2])) {
-        if (txt.includes('BRCA1')) BRCA = 'BRCA1+';
-        else if (txt.includes('BRCA2')) BRCA = 'BRCA2+';
-        else BRCA = 'BRCA+';
-      } else if (/negative|wild|absent|\-/i.test(match[1] || match[2])) {
+      const which = match[1] && /^(1|2)$/.test(match[1]) ? match[1] : (/(BRCA\s*1)/i.test(match[0]) ? '1' : (/(BRCA\s*2)/i.test(match[0]) ? '2' : ''));
+      const token = (match[2] || match[1] || '').toString();
+      if (/positive|mutation|present|\+/i.test(token)) {
+        BRCA = which === '1' ? 'BRCA1+' : which === '2' ? 'BRCA2+' : 'BRCA+';
+      } else if (/negative|wild|absent|\-/i.test(token)) {
         BRCA = 'Negative';
-      } else if (/not\s+tested/i.test(match[1] || match[2])) {
+      } else if (/not\s+tested/i.test(token)) {
         BRCA = 'Not tested';
       }
       break;
@@ -255,21 +269,24 @@ function extractDataFromText(txt) {
     }
   }
   
-  // PD-L1 EXTRACTION
+  // PD-L1 EXTRACTION (SP142 immune cell % threshold ≥1% considered positive in reports)
   let PDL1 = t.not_available;
   const pdl1Patterns = [
     /PD[-]?L1[:\s-]*(High|Low|Positive|Negative|Expression|CPS\s*[<>=]\s*\d+)/i,
     /Programmed Death Ligand 1[:\s-]*(High|Low|Positive|Negative)/i,
-    /PD[-]?L1.*?(\d+)%/i,
-    /CPS\s*[:\s]?\s*(\d+)/i
+    /PD[-]?L1[^%\n]{0,40}?(\d+)%/i,
+    /CPS\s*[:\s]?\s*(\d+)/i,
+    /SP142[^\n]{0,40}?(\d+)%/i
   ];
-  
+
   for (const pattern of pdl1Patterns) {
     const match = txt.match(pattern);
     if (match) {
-      if (/high|positive/i.test(match[1]) || (match[1] && parseInt(match[1]) >= 10)) {
+      const token = (match[1] || '').toString();
+      const pct = parseInt(token, 10);
+      if (/high|positive/i.test(token) || (!isNaN(pct) && pct >= 1)) {
         PDL1 = 'High expression';
-      } else if (/low|negative/i.test(match[1]) || (match[1] && parseInt(match[1]) < 10)) {
+      } else if (/low|negative/i.test(token) || (!isNaN(pct) && pct < 1)) {
         PDL1 = 'Low expression';
       }
       if (PDL1 !== t.not_available) break;
