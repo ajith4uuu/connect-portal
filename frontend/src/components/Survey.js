@@ -812,7 +812,7 @@ function Survey({ onComplete }) {
     <Card sx={{ position: 'relative' }}>
       <CardContent>
         <Box className="stepper-nav" sx={{ mb: 4 }}>
-          <IconButton aria-label="scroll steps left" className="stepper-arrow stepper-arrow-left" onClick={() => scrollSteps('left')} size="small">
+          <IconButton aria-label="scroll steps left" className="stepper-arrow stepper-arrow-left" onClick={() => scrollSteps('left')} size="small" sx={{ position: 'absolute', top: 8, left: 8, zIndex: 2 }}>
             <ArrowBackIosNew fontSize="inherit" />
           </IconButton>
           <Box ref={stepperScrollRef} className="stepper-scroll-container">
@@ -828,7 +828,7 @@ function Survey({ onComplete }) {
               ))}
             </Stepper>
           </Box>
-          <IconButton aria-label="scroll steps right" className="stepper-arrow stepper-arrow-right" onClick={() => scrollSteps('right')} size="small">
+          <IconButton aria-label="scroll steps right" className="stepper-arrow stepper-arrow-right" onClick={() => scrollSteps('right')} size="small" sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
             <ArrowForwardIos fontSize="inherit" />
           </IconButton>
         </Box>
