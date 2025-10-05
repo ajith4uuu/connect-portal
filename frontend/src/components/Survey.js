@@ -815,7 +815,7 @@ function Survey({ onComplete }) {
           <IconButton aria-label="scroll steps left" className="stepper-arrow stepper-arrow-left" onClick={() => scrollSteps('left')} size="small" sx={{ position: 'absolute', top: 8, left: 8, zIndex: 2 }}>
             <ArrowBackIosNew fontSize="inherit" />
           </IconButton>
-          <Box ref={stepperScrollRef} className="stepper-scroll-container" sx={{ mt: '10px' }}>
+          <Box ref={stepperScrollRef} className="stepper-scroll-container" sx={{ mt: '20px' }}>
             <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
               {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
                 <Step key={index}>
