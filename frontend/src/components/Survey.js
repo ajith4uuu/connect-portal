@@ -6,9 +6,9 @@ import {
   Button, TextField, Radio, RadioGroup, FormControlLabel,
   FormControl, FormLabel, Select, MenuItem, Checkbox,
   FormGroup, Typography, LinearProgress,
-  Dialog, DialogTitle, DialogContent, DialogActions
+  Dialog, DialogTitle, DialogContent, DialogActions, IconButton
 } from '@mui/material';
-import { CloudUpload, NavigateNext, NavigateBefore } from '@mui/icons-material';
+import { CloudUpload, NavigateNext, NavigateBefore, ArrowBackIosNew, ArrowForwardIos } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -228,7 +228,7 @@ function Survey({ onComplete }) {
         else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) {
           newErrors.email = t('invalid_email');
         }
-        if (!otpVerified) newErrors.otp = t('otp_required');
+        if (process.env.REACT_APP_SKIP_OTP !== 'true' && !otpVerified) newErrors.otp = t('otp_required');
         break;
       case 2: // Privacy
         if (!formData.privacy) newErrors.privacy = t('required_field');
@@ -334,6 +334,13 @@ function Survey({ onComplete }) {
       container.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
     }
   }, [activeStep, surveyDefinition.length]);
+
+  const scrollSteps = (dir) => {
+    const container = stepperScrollRef.current;
+    if (!container) return;
+    const amount = Math.round(container.clientWidth * 0.6) * (dir === 'left' ? -1 : 1);
+    container.scrollBy({ left: amount, behavior: 'smooth' });
+  };
 
   const originTag = (id) => {
     const isAi = fieldOrigins[id] === 'ai';
@@ -802,20 +809,28 @@ function Survey({ onComplete }) {
   };
 
   return (
-    <Card>
+    <Card sx={{ position: 'relative' }}>
       <CardContent>
-        <Box ref={stepperScrollRef} sx={{ overflowX: 'auto', overflowY: 'hidden', mb: 4 }}>
-          <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
-            {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
-              <Step key={index}>
-                <StepLabel>
-                  <span ref={(el) => { stepRefs.current[index] = el; }}>
-                    {index === activeStep ? label : ''}
-                  </span>
-                </StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+        <Box className="stepper-nav" sx={{ mb: 4 }}>
+          <IconButton aria-label="scroll steps left" className="stepper-arrow stepper-arrow-left" onClick={() => scrollSteps('left')} size="small" sx={{ position: 'absolute', top: 8, left: 8, zIndex: 2 }}>
+            <ArrowBackIosNew fontSize="inherit" />
+          </IconButton>
+          <Box ref={stepperScrollRef} className="stepper-scroll-container" sx={{ mt: '30px' }}>
+            <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
+              {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
+                <Step key={index}>
+                  <StepLabel>
+                    <span ref={(el) => { stepRefs.current[index] = el; }}>
+                      {index === activeStep ? label : ''}
+                    </span>
+                  </StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+          </Box>
+          <IconButton aria-label="scroll steps right" className="stepper-arrow stepper-arrow-right" onClick={() => scrollSteps('right')} size="small" sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
+            <ArrowForwardIos fontSize="inherit" />
+          </IconButton>
         </Box>
         
         {renderStepContent()}

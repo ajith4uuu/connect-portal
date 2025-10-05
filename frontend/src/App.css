@@ -395,6 +395,28 @@ code {
   border: 0;
 }
 
+/* Stepper horizontal scroll (hide scrollbar, keep ticks and labels) */
+.stepper-scroll-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0 64px 0 44px;
+}
+.stepper-scroll-container::-webkit-scrollbar { display: none; }
+.stepper-arrow {
+  position: absolute;
+  top: 8px;
+  transform: none;
+  background: var(--white);
+  color: var(--bcc-light-green);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  border: 1px solid rgba(0,0,0,0.06);
+  z-index: 2;
+}
+.stepper-arrow-left { left: 8px; }
+.stepper-arrow-right { right: 8px; }
+
 /* Focus Styles for Accessibility */
 *:focus-visible {
   outline: 2px solid var(--bcc-light-green);

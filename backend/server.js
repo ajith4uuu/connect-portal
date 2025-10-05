@@ -161,7 +161,11 @@ async function initializeBigQuery() {
 }
 
 // Initialize BigQuery on startup (let ADC provide credentials on Cloud Run)
-initializeBigQuery();
+if (process.env.BQ_DISABLE_INIT === 'true' || (!process.env.GCP_PROJECT_ID && !process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+  console.warn('BigQuery initialization skipped: no credentials configured.');
+} else {
+  initializeBigQuery();
+}
 
 // API Routes
 
@@ -374,15 +378,28 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
         const fileData = extractDataFromText(text);
         const fileDate = parseReportDate(text) || new Date();
 
-        // Merge with combined data, preferring latest per-field
+        // Merge with combined data, preferring meaningful and latest per-field
         for (const key in fileData) {
           const val = fileData[key];
-          if (val && val !== t.not_available) {
-            const prevTs = fieldTimestamps[key];
-            if (!prevTs || fileDate >= prevTs) {
-              combinedData[key] = val;
-              fieldTimestamps[key] = fileDate;
-            }
+          const isMeaningful = (v) => {
+            if (!v) return false;
+            const s = String(v).toLowerCase();
+            return s !== String(t.not_available).toLowerCase() &&
+                   !s.includes('not tested') &&
+                   !s.includes('not sure') &&
+                   !s.includes('not specified') &&
+                   !s.includes('unknown');
+          };
+          const prev = combinedData[key];
+          const prevMeaningful = isMeaningful(prev);
+          const currMeaningful = isMeaningful(val);
+          if (currMeaningful && (!prevMeaningful || fileDate >= (fieldTimestamps[key] || 0))) {
+            combinedData[key] = val;
+            fieldTimestamps[key] = fileDate;
+          } else if (!prevMeaningful && (val && val !== t.not_available)) {
+            // allow filling previously empty with any value
+            combinedData[key] = val;
+            fieldTimestamps[key] = fileDate;
           }
         }
       } catch (docError) {
