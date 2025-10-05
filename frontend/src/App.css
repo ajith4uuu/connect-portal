@@ -405,15 +405,16 @@ code {
 .stepper-scroll-container::-webkit-scrollbar { display: none; }
 .stepper-arrow {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 8px;
+  transform: none;
   background: var(--white);
   color: var(--bcc-light-green);
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   border: 1px solid rgba(0,0,0,0.06);
+  z-index: 2;
 }
-.stepper-arrow-left { left: -10px; }
-.stepper-arrow-right { right: -10px; }
+.stepper-arrow-left { left: 8px; }
+.stepper-arrow-right { right: 8px; }
 
 /* Focus Styles for Accessibility */
 *:focus-visible {
