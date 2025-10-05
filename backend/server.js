@@ -161,7 +161,11 @@ async function initializeBigQuery() {
 }
 
 // Initialize BigQuery on startup (let ADC provide credentials on Cloud Run)
-initializeBigQuery();
+if (process.env.BQ_DISABLE_INIT === 'true' || (!process.env.GCP_PROJECT_ID && !process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+  console.warn('BigQuery initialization skipped: no credentials configured.');
+} else {
+  initializeBigQuery();
+}
 
 // API Routes
 
