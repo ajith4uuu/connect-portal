@@ -809,9 +809,9 @@ function Survey({ onComplete }) {
   };
 
   return (
-    <Card>
+    <Card sx={{ position: 'relative' }}>
       <CardContent>
-        <Box className="stepper-nav" sx={{ position: 'relative', mb: 4 }}>
+        <Box className="stepper-nav" sx={{ mb: 4 }}>
           <IconButton aria-label="scroll steps left" className="stepper-arrow stepper-arrow-left" onClick={() => scrollSteps('left')} size="small">
             <ArrowBackIosNew fontSize="inherit" />
           </IconButton>
