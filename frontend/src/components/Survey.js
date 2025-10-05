@@ -228,7 +228,7 @@ function Survey({ onComplete }) {
         else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) {
           newErrors.email = t('invalid_email');
         }
-        if (!otpVerified) newErrors.otp = t('otp_required');
+        if (process.env.REACT_APP_SKIP_OTP !== 'true' && !otpVerified) newErrors.otp = t('otp_required');
         break;
       case 2: // Privacy
         if (!formData.privacy) newErrors.privacy = t('required_field');
