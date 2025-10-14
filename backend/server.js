@@ -718,7 +718,7 @@ async function sendEmail(email, userStage, calculatedStage, packages, pdfUrl, su
                  `${t.best_regards}\n${t.team_name}`;
     
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: `BCC CONNECT <${process.env.EMAIL_USER}>`,
       to: email,
       subject: subject,
       text: body
