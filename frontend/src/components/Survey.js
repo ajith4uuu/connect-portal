@@ -270,13 +270,13 @@ function Survey({ onComplete }) {
       return;
     }
     
-    // Check for exit conditions
+    // Redirect to BCC home when user does not consent/privacy declines
     if (activeStep === 0 && formData.consent === 'no') {
-      setExitDialog(true);
+      window.location.assign('https://breastcancercanada.ca');
       return;
     }
     if (activeStep === 2 && formData.privacy === 'no') {
-      setExitDialog(true);
+      window.location.assign('https://breastcancercanada.ca');
       return;
     }
     if (activeStep === 6 && formData.stageConfirm === 'no') {
