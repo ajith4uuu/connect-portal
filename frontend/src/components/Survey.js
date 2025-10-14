@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -67,8 +67,14 @@ function Survey({ onComplete }) {
     t('stage_title')
   ];
 
+  // Visible dynamic questions (hide 'spread' unless Stage IV)
+  const filteredQuestions = useMemo(
+    () => surveyDefinition.filter(q => !(q.id === 'spread' && formData.stage !== 'Stage IV')),
+    [surveyDefinition, formData.stage]
+  );
+
   // Total steps calculation
-  const totalSteps = staticSteps.length + surveyDefinition.length + 1; // +1 for review
+  const totalSteps = staticSteps.length + filteredQuestions.length + 1; // +1 for review
 
   // Define before useEffect to satisfy eslint no-use-before-define
   const loadSurveyDefinition = useCallback(async () => {
@@ -252,8 +258,8 @@ function Survey({ onComplete }) {
         break;
       default:
         // Dynamic questions validation
-        if (step >= staticSteps.length && step < staticSteps.length + surveyDefinition.length) {
-          const question = surveyDefinition[step - staticSteps.length];
+        if (step >= staticSteps.length && step < staticSteps.length + filteredQuestions.length) {
+          const question = filteredQuestions[step - staticSteps.length];
           if (question.required && !formData[question.id]) {
             newErrors[question.id] = t('required_field');
           }
@@ -333,6 +339,14 @@ function Survey({ onComplete }) {
       container.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
     }
   }, [activeStep, surveyDefinition.length]);
+
+  // Clamp activeStep if filtered steps shrink (e.g., hiding 'spread' when not Stage IV)
+  useEffect(() => {
+    const maxIndex = totalSteps - 1;
+    if (activeStep > maxIndex) {
+      setActiveStep(maxIndex);
+    }
+  }, [totalSteps]);
 
   const scrollSteps = (dir) => {
     const container = stepperScrollRef.current;
@@ -626,11 +640,8 @@ function Survey({ onComplete }) {
         
       default:
         // Dynamic questions
-        if (activeStep >= staticSteps.length && activeStep < staticSteps.length + surveyDefinition.length) {
-          const question = surveyDefinition[activeStep - staticSteps.length];
-          if (question.id === 'spread' && formData.stage !== 'Stage IV') {
-            return null;
-          }
+        if (activeStep >= staticSteps.length && activeStep < staticSteps.length + filteredQuestions.length) {
+          const question = filteredQuestions[activeStep - staticSteps.length];
           return renderDynamicQuestion(question);
         }
         
@@ -792,7 +803,7 @@ function Survey({ onComplete }) {
           </IconButton>
           <Box ref={stepperScrollRef} className="stepper-scroll-container" sx={{ mt: '30px' }}>
             <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
-              {[...staticSteps, ...surveyDefinition.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
+              {[...staticSteps, ...filteredQuestions.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
                 <Step key={index}>
                   <StepLabel>
                     <span ref={(el) => { stepRefs.current[index] = el; }}>
