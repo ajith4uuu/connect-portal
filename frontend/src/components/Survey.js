@@ -844,7 +844,7 @@ function Survey({ onComplete }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setExitDialog(false)}>{t('cancel')}</Button>
-          <Button onClick={() => navigate('/')} color="error">{t('exit')}</Button>
+          <Button onClick={() => window.location.assign('https://breastcancercanada.ca')} color="error">{t('exit')}</Button>
         </DialogActions>
       </Dialog>
     </Card>
