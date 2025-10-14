@@ -63,7 +63,6 @@ function Survey({ onComplete }) {
     t('email_title'),
     t('privacy_title'),
     t('report_title'),
-    t('analysis_title'),
     t('cancer_type_step'),
     t('stage_title')
   ];
