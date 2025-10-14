@@ -668,7 +668,6 @@ function Survey({ onComplete }) {
                 ))}
               </Select>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
-              {originTag(question.id)}
             </FormControl>
           </Box>
         );
