@@ -536,7 +536,6 @@ function Survey({ onComplete }) {
               margin="normal"
               InputProps={{ inputProps: { min: 18, max: 120 } }}
             />
-            {originTag('age')}
             
             <TextField
               fullWidth
