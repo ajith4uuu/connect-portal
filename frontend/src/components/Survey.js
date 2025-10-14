@@ -686,7 +686,6 @@ function Survey({ onComplete }) {
                 ))}
               </RadioGroup>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
-              {originTag(question.id)}
             </FormControl>
           </Box>
         );
