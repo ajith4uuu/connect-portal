@@ -770,7 +770,6 @@ function Survey({ onComplete }) {
             return (
               <Typography key={q.id}>
                 <strong>{q.title}:</strong> {Array.isArray(value) ? value.join(', ') : value}
-                {fieldOrigins[q.id] === 'ai' ? ` (${t('extracted_from_report')})` : ` (${t('entered_manually')})`}
               </Typography>
             );
           })}
