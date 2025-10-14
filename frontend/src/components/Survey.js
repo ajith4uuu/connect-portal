@@ -341,14 +341,6 @@ function Survey({ onComplete }) {
     container.scrollBy({ left: amount, behavior: 'smooth' });
   };
 
-  const originTag = (id) => {
-    const isAi = fieldOrigins[id] === 'ai';
-    const hasVal = !!formData[id];
-    if (isAi) return (<Typography variant="caption" sx={{ color: '#53868b' }}>{t('extracted_from_report')}</Typography>);
-    if (hasVal) return (<Typography variant="caption" sx={{ color: '#666' }}>{t('entered_manually')}</Typography>);
-    return null;
-  };
-
   const renderStepContent = () => {
     switch(activeStep) {
       case 0: // Consent
