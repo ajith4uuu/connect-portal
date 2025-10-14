@@ -635,6 +635,9 @@ function Survey({ onComplete }) {
         // Dynamic questions
         if (activeStep >= staticSteps.length && activeStep < staticSteps.length + surveyDefinition.length) {
           const question = surveyDefinition[activeStep - staticSteps.length];
+          if (question.id === 'spread' && formData.stage !== 'Stage IV') {
+            return null;
+          }
           return renderDynamicQuestion(question);
         }
         
