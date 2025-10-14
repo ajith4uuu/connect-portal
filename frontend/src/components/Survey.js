@@ -543,7 +543,7 @@ function Survey({ onComplete }) {
               value={formData.province}
               onChange={(e) => { setFormData({...formData, province: e.target.value}); setFieldOrigins(prev => ({ ...prev, province: 'user' })); }}
               error={!!errors.province}
-              helperText={errors.province || (extractedData.province && t('extracted_from_report'))}
+              helperText={errors.province}
               placeholder={t('province_placeholder')}
               margin="normal"
             />
