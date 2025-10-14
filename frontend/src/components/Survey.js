@@ -560,7 +560,6 @@ function Survey({ onComplete }) {
                 <MenuItem value="Other">{t('other')}</MenuItem>
               </Select>
             </FormControl>
-            {originTag('country')}
           </Box>
         );
         
