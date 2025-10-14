@@ -738,7 +738,6 @@ function Survey({ onComplete }) {
               placeholder={question.placeholder}
               margin="normal"
             />
-            {originTag(question.id)}
           </Box>
         );
     }
