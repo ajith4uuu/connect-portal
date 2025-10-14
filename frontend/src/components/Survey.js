@@ -532,7 +532,7 @@ function Survey({ onComplete }) {
               value={formData.age}
               onChange={(e) => { setFormData({...formData, age: e.target.value}); setFieldOrigins(prev => ({ ...prev, age: 'user' })); }}
               error={!!errors.age}
-              helperText={errors.age || (extractedData.age && t('extracted_from_report'))}
+              helperText={errors.age}
               margin="normal"
               InputProps={{ inputProps: { min: 18, max: 120 } }}
             />
