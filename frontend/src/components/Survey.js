@@ -758,9 +758,9 @@ function Survey({ onComplete }) {
         
         <Box sx={{ mb: 3 }}>
           <Typography><strong>{t('email_label')}:</strong> {formData.email}</Typography>
-          <Typography><strong>{t('age_label')}:</strong> {formData.age}{fieldOrigins.age === 'ai' ? ` (${t('extracted_from_report')})` : (formData.age ? ` (${t('entered_manually')})` : '')}</Typography>
-          <Typography><strong>{t('province_label')}:</strong> {formData.province}{fieldOrigins.province === 'ai' ? ` (${t('extracted_from_report')})` : (formData.province ? ` (${t('entered_manually')})` : '')}</Typography>
-          <Typography><strong>{t('country_label')}:</strong> {formData.country}{fieldOrigins.country === 'ai' ? ` (${t('extracted_from_report')})` : (formData.country ? ` (${t('entered_manually')})` : '')}</Typography>
+          <Typography><strong>{t('age_label')}:</strong> {formData.age}</Typography>
+          <Typography><strong>{t('province_label')}:</strong> {formData.province}</Typography>
+          <Typography><strong>{t('country_label')}:</strong> {formData.country}</Typography>
           <Typography><strong>{t('cancer_type_title')}:</strong> {formData.cancerType || t('not_specified')}</Typography>
 
           {surveyDefinition.map(q => {
