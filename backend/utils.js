@@ -465,51 +465,37 @@ function computePackages(userStage, resp) {
   return pkgs;
 }
 
-function getPdfLink(userStage, resp) {
-  // Try direct mapping first
-  if (PDF_MAPPING[userStage]) {
-    return PDF_MAPPING[userStage];
-  }
-  
-  // Advanced matching based on biomarkers for compound stages
+function getPdfKey(userStage, resp) {
   const erPos = !!(resp.ERPR && resp.ERPR.includes('ER+'));
   const prPos = !!(resp.ERPR && resp.ERPR.includes('PR+'));
   const anyHrPos = erPos || prPos;
   const her2High = resp.HER2?.includes('(3+)');
   const her2Low = resp.HER2?.includes('(1+ or 2+)');
   const brcaPos = resp.BRCA?.includes('+');
-  
-  // Build key based on stage and biomarkers
-  const baseStage = userStage.split(' ').slice(0, 2).join(' '); // Get "Stage X"
-  
+
+  const baseStage = (userStage && /^(DCIS\s*\/\s*Stage\s*0|Stage\s*(?:0|I{1,3}|IV))/i.test(userStage))
+    ? (userStage.match(/^(DCIS\s*\/\s*Stage\s*0|Stage\s*(?:0|I{1,3}|IV))/i)[1]
+        .replace(/\s+/g, ' ') // normalize spaces
+        .replace(/DCIS\s*\/\s*Stage\s*0/i, 'DCIS / Stage 0'))
+    : (userStage || '');
+
   if (baseStage === 'Stage II' || baseStage === 'Stage III' || baseStage === 'Stage IV') {
-    if (anyHrPos && her2High) {
-      const key = `${baseStage} ER+/PR+/HER2+`;
-      if (PDF_MAPPING[key]) return PDF_MAPPING[key];
-    }
-    if (anyHrPos && her2Low) {
-      const key = `${baseStage} ER+/PR+/HER2 Low`;
-      if (PDF_MAPPING[key]) return PDF_MAPPING[key];
-    }
-    if (anyHrPos && !her2High && !her2Low) {
-      const key = `${baseStage} ER+/PR+`;
-      if (PDF_MAPPING[key]) return PDF_MAPPING[key];
-    }
-    if (her2High && !anyHrPos) {
-      const key = `${baseStage} HER-2+`;
-      if (PDF_MAPPING[key]) return PDF_MAPPING[key];
-    }
-    if (brcaPos) {
-      const key = `${baseStage} BRCA+`;
-      if (PDF_MAPPING[key]) return PDF_MAPPING[key];
-    }
-    if (!anyHrPos && !her2High) {
-      const key = `${baseStage} TNBC`;
-      if (PDF_MAPPING[key]) return PDF_MAPPING[key];
-    }
+    if (anyHrPos && her2High) return `${baseStage} ER+/PR+/HER2+`;
+    if (anyHrPos && her2Low) return `${baseStage} ER+/PR+/HER2 Low`;
+    if (anyHrPos && !her2High && !her2Low) return `${baseStage} ER+/PR+`;
+    if (her2High && !anyHrPos) return `${baseStage} HER-2+`;
+    if (brcaPos) return `${baseStage} BRCA+`;
+    if (!anyHrPos && !her2High) return `${baseStage} TNBC`;
   }
-  
-  // Fallback to base stage
+  return baseStage;
+}
+
+function getPdfLink(userStage, resp) {
+  // Preferred mapping key
+  const key = getPdfKey(userStage, resp);
+  if (PDF_MAPPING[key]) return PDF_MAPPING[key];
+  // Fallback to base stage if compound key missing
+  const baseStage = (key && key.startsWith('Stage')) ? key.split(' ').slice(0, 2).join(' ') : key;
   return PDF_MAPPING[baseStage] || '';
 }
 
@@ -546,5 +532,6 @@ module.exports = {
   calculateStageFromBiomarkers,
   computePackages,
   getPdfLink,
+  getPdfKey,
   parseReportDate
 };
