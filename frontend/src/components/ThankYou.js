@@ -42,10 +42,7 @@ function ThankYou({ data }) {
           
           <Paper elevation={1} sx={{ p: 3, mb: 3, bgcolor: '#f5f5f5', textAlign: 'left' }}>
             <Typography variant="subtitle1" gutterBottom>
-              <strong>{t('selected_stage')}:</strong> {data.userStage}
-            </Typography>
-            <Typography variant="subtitle1" gutterBottom>
-              <strong>{t('calculated_stage')}:</strong> {data.calculatedStage}
+              <strong>{t('your_type_label')}:</strong> {data.userStage}
             </Typography>
             {data.packages && (
               <Typography variant="subtitle1" gutterBottom>
@@ -53,30 +50,11 @@ function ThankYou({ data }) {
               </Typography>
             )}
           </Paper>
-          
+
           {data.geminiSummary && (
-            <Paper elevation={2} sx={{ 
-              p: 3, 
-              mb: 3, 
-              bgcolor: '#f5f5f5',
-              textAlign: 'left',
-              borderLeft: '4px solid #53868b'
-            }}>
-              <Typography variant="h6" sx={{ 
-                color: '#53868b', 
-                borderBottom: '2px solid #e5317a',
-                pb: 1,
-                mb: 2
-              }}>
-                {t('ai_summary')}
-              </Typography>
-              <Typography variant="body2" sx={{ fontStyle: 'italic', mb: 2 }}>
-                {t('summary_text')}
-              </Typography>
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                {data.geminiSummary}
-              </Typography>
-            </Paper>
+            <Typography variant="caption" sx={{ display: 'block', color: '#666', mt: 2 }}>
+              {t('ai_summary')}: {t('summary_text')}
+            </Typography>
           )}
           
           {data.downloadUrl && (
