@@ -547,7 +547,6 @@ function Survey({ onComplete }) {
               placeholder={t('province_placeholder')}
               margin="normal"
             />
-            {originTag('province')}
             
             <FormControl fullWidth margin="normal" error={!!errors.country}>
               <Select
