@@ -366,7 +366,7 @@ function Survey({ onComplete }) {
                 onChange={(e) => setFormData({...formData, consent: e.target.value})}
               >
                 <FormControlLabel value="yes" control={<Radio />} label={`${t('yes')}, ${t('please_continue')}`} />
-                <FormControlLabel value="no" control={<Radio />} label={`${t('no')}, ${t('exit_survey')}`} />
+                <FormControlLabel value="no" control={<Radio />} label={`${t('no')}, ${t('do_not_wish_to_continue')}`} />
               </RadioGroup>
             </FormControl>
           </Box>
