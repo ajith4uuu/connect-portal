@@ -15,7 +15,7 @@ const nodemailer = require('nodemailer');
 const { VertexAI } = require('@google-cloud/aiplatform');
 
 const translations = require('./translations');
-const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, parseReportDate } = require('./utils');
+const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, getPdfKey, parseReportDate } = require('./utils');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -435,9 +435,9 @@ app.post('/api/submit', async (req, res) => {
     // Get treatment packages
     const packages = computePackages(userStage, extracted);
     
-    // Get PDF link
-    const pdfUrl = getPdfLink(userStage, extracted);
-    
+    // Get PDF link (prefer GCS if configured)
+    const pdfUrl = await resolvePdfUrl(userStage, extracted);
+
     // Generate AI summary
     let aiSummary = '';
     if (process.env.GEMINI_API_KEY) {
@@ -633,6 +633,101 @@ app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
+// PDF key -> GCS object name
+function pdfKeyToObjectName(key) {
+  if (!key) return '';
+  const normalized = key
+    .toLowerCase()
+    .replace(/dcis\s*\/\s*stage\s*0/g, 'dcis-stage-0')
+    .replace(/stage\s*iv\b/g, 'stage-iv')
+    .replace(/stage\s*iii\b/g, 'stage-iii')
+    .replace(/stage\s*ii\b/g, 'stage-ii')
+    .replace(/stage\s*i\b/g, 'stage-i')
+    .replace(/stage\s*0\b/g, 'stage-0')
+    .replace(/er\+\s*\/\s*pr\+/g, 'erprplus')
+    .replace(/er\s*\/\s*pr\+/g, 'erprplus')
+    .replace(/er\+\s*\/\s*pr\s*\+/g, 'erprplus')
+    .replace(/her[-\s]?2\s*\+/g, 'her2plus')
+    .replace(/her[-\s]?2\s*low/g, 'her2-low')
+    .replace(/brca\s*\+/g, 'brca-plus')
+    .replace(/\s*\+\s*/g, 'plus')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `${normalized}.pdf`;
+}
+
+function buildGcsPublicUrl(bucket, objectPath) {
+  return `https://storage.googleapis.com/${bucket}/${objectPath}`;
+}
+
+async function fileExistsInGcs(bucketName, objectPath) {
+  try {
+    const [exists] = await storage.bucket(bucketName).file(objectPath).exists();
+    return !!exists;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function resolvePdfUrl(userStage, extracted) {
+  const bucketName = process.env.GCS_PDF_BUCKET;
+  if (!bucketName) {
+    return getPdfLink(userStage, extracted) || '';
+  }
+
+  const prefix = (process.env.GCS_PDF_PREFIX || '').replace(/^\/+|\/+$/g, '');
+  const access = (process.env.GCS_PDF_ACCESS || 'public').toLowerCase(); // 'public' | 'signed'
+  const ttlSeconds = parseInt(process.env.GCS_SIGNED_URL_TTL || '604800', 10); // default 7 days
+
+  const key = getPdfKey(userStage, extracted);
+  const candidateNames = [];
+
+  const primary = pdfKeyToObjectName(key);
+  if (primary) candidateNames.push(primary);
+
+  // Base stage fallback, e.g., 'Stage II'
+  const baseMatch = key && key.match(/^(dcis\s*\/\s*stage\s*0|stage\s*(?:0|i{1,3}|iv))/i);
+  if (baseMatch) {
+    const baseKey = baseMatch[1]
+      .replace(/\s+/g, ' ')
+      .replace(/dcis\s*\/\s*stage\s*0/i, 'DCIS / Stage 0')
+      .replace(/stage\s*iv/i, 'Stage IV')
+      .replace(/stage\s*iii/i, 'Stage III')
+      .replace(/stage\s*ii/i, 'Stage II')
+      .replace(/stage\s*i(?!v)/i, 'Stage I')
+      .replace(/stage\s*0/i, 'Stage 0');
+    const baseObj = pdfKeyToObjectName(baseKey);
+    if (baseObj && baseObj !== primary) candidateNames.push(baseObj);
+  }
+
+  for (const name of candidateNames) {
+    const objectPath = prefix ? `${prefix}/${name}` : name;
+    const exists = await fileExistsInGcs(bucketName, objectPath);
+    if (!exists) continue;
+
+    if (access === 'signed') {
+      try {
+        const options = {
+          version: 'v4',
+          action: 'read',
+          expires: Date.now() + ttlSeconds * 1000
+        };
+        const [url] = await storage.bucket(bucketName).file(objectPath).getSignedUrl(options);
+        return url;
+      } catch (e) {
+        // Fall back to public URL if signing fails
+        return buildGcsPublicUrl(bucketName, objectPath);
+      }
+    } else {
+      return buildGcsPublicUrl(bucketName, objectPath);
+    }
+  }
+
+  // If no object found, fall back to Drive mapping
+  return getPdfLink(userStage, extracted) || '';
+}
+
 // Gemini summary generation
 async function generateGeminiSummary(userStage, answers, packages, lang = 'en') {
   const t = translations[lang] || translations.en;
@@ -718,7 +813,7 @@ async function sendEmail(email, userStage, calculatedStage, packages, pdfUrl, su
                  `${t.best_regards}\n${t.team_name}`;
     
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: `BCC CONNECT <${process.env.EMAIL_USER}>`,
       to: email,
       subject: subject,
       text: body

@@ -63,7 +63,6 @@ function Survey({ onComplete }) {
     t('email_title'),
     t('privacy_title'),
     t('report_title'),
-    t('analysis_title'),
     t('cancer_type_step'),
     t('stage_title')
   ];
@@ -271,13 +270,13 @@ function Survey({ onComplete }) {
       return;
     }
     
-    // Check for exit conditions
+    // Redirect to BCC home when user does not consent/privacy declines
     if (activeStep === 0 && formData.consent === 'no') {
-      setExitDialog(true);
+      window.location.assign('https://breastcancercanada.ca');
       return;
     }
     if (activeStep === 2 && formData.privacy === 'no') {
-      setExitDialog(true);
+      window.location.assign('https://breastcancercanada.ca');
       return;
     }
     if (activeStep === 6 && formData.stageConfirm === 'no') {
@@ -367,7 +366,7 @@ function Survey({ onComplete }) {
                 onChange={(e) => setFormData({...formData, consent: e.target.value})}
               >
                 <FormControlLabel value="yes" control={<Radio />} label={`${t('yes')}, ${t('please_continue')}`} />
-                <FormControlLabel value="no" control={<Radio />} label={`${t('no')}, ${t('exit_survey')}`} />
+                <FormControlLabel value="no" control={<Radio />} label={`${t('no')}, ${t('do_not_wish_to_continue')}`} />
               </RadioGroup>
             </FormControl>
           </Box>
@@ -458,7 +457,7 @@ function Survey({ onComplete }) {
                 onChange={(e) => setFormData({...formData, privacy: e.target.value})}
               >
                 <FormControlLabel value="yes" control={<Radio />} label={`${t('yes')}, ${t('i_consent')}`} />
-                <FormControlLabel value="no" control={<Radio />} label={`${t('no')}, ${t('exit_survey')}`} />
+                <FormControlLabel value="no" control={<Radio />} label={`${t('no')}, ${t('do_not_wish_to_continue')}`} />
               </RadioGroup>
             </FormControl>
           </Box>
@@ -533,11 +532,10 @@ function Survey({ onComplete }) {
               value={formData.age}
               onChange={(e) => { setFormData({...formData, age: e.target.value}); setFieldOrigins(prev => ({ ...prev, age: 'user' })); }}
               error={!!errors.age}
-              helperText={errors.age || (extractedData.age && t('extracted_from_report'))}
+              helperText={errors.age}
               margin="normal"
               InputProps={{ inputProps: { min: 18, max: 120 } }}
             />
-            {originTag('age')}
             
             <TextField
               fullWidth
@@ -545,11 +543,10 @@ function Survey({ onComplete }) {
               value={formData.province}
               onChange={(e) => { setFormData({...formData, province: e.target.value}); setFieldOrigins(prev => ({ ...prev, province: 'user' })); }}
               error={!!errors.province}
-              helperText={errors.province || (extractedData.province && t('extracted_from_report'))}
+              helperText={errors.province}
               placeholder={t('province_placeholder')}
               margin="normal"
             />
-            {originTag('province')}
             
             <FormControl fullWidth margin="normal" error={!!errors.country}>
               <Select
@@ -563,7 +560,6 @@ function Survey({ onComplete }) {
                 <MenuItem value="Other">{t('other')}</MenuItem>
               </Select>
             </FormControl>
-            {originTag('country')}
           </Box>
         );
         
@@ -571,18 +567,6 @@ function Survey({ onComplete }) {
         return (
           <Box>
             <Typography variant="h5" gutterBottom>{t('analysis_title')}</Typography>
-            
-            {extractedData && (
-              <Box sx={{ bgcolor: '#f8d7e4', p: 2, borderLeft: '4px solid #e5317a', mb: 3 }}>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  {t('analysis_text')}
-                </Typography>
-                <Typography>ER/PR: {extractedData.ERPR || t('not_tested')}</Typography>
-                <Typography>HER2: {extractedData.HER2 || t('not_tested')}</Typography>
-                <Typography>BRCA: {extractedData.BRCA || t('not_tested')}</Typography>
-                <Typography>Stage: {extractedData.stage || t('not_detected')}</Typography>
-              </Box>
-            )}
             
             <FormControl fullWidth error={!!errors.stage}>
               <FormLabel>{t('stage_select_label')} *</FormLabel>
@@ -651,6 +635,9 @@ function Survey({ onComplete }) {
         // Dynamic questions
         if (activeStep >= staticSteps.length && activeStep < staticSteps.length + surveyDefinition.length) {
           const question = surveyDefinition[activeStep - staticSteps.length];
+          if (question.id === 'spread' && formData.stage !== 'Stage IV') {
+            return null;
+          }
           return renderDynamicQuestion(question);
         }
         
@@ -684,7 +671,6 @@ function Survey({ onComplete }) {
                 ))}
               </Select>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
-              {originTag(question.id)}
             </FormControl>
           </Box>
         );
@@ -703,7 +689,6 @@ function Survey({ onComplete }) {
                 ))}
               </RadioGroup>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
-              {originTag(question.id)}
             </FormControl>
           </Box>
         );
@@ -738,7 +723,6 @@ function Survey({ onComplete }) {
                 ))}
               </FormGroup>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
-              {originTag(question.id)}
             </FormControl>
           </Box>
         );
@@ -757,7 +741,6 @@ function Survey({ onComplete }) {
               placeholder={question.placeholder}
               margin="normal"
             />
-            {originTag(question.id)}
           </Box>
         );
     }
@@ -778,9 +761,9 @@ function Survey({ onComplete }) {
         
         <Box sx={{ mb: 3 }}>
           <Typography><strong>{t('email_label')}:</strong> {formData.email}</Typography>
-          <Typography><strong>{t('age_label')}:</strong> {formData.age}{fieldOrigins.age === 'ai' ? ` (${t('extracted_from_report')})` : (formData.age ? ` (${t('entered_manually')})` : '')}</Typography>
-          <Typography><strong>{t('province_label')}:</strong> {formData.province}{fieldOrigins.province === 'ai' ? ` (${t('extracted_from_report')})` : (formData.province ? ` (${t('entered_manually')})` : '')}</Typography>
-          <Typography><strong>{t('country_label')}:</strong> {formData.country}{fieldOrigins.country === 'ai' ? ` (${t('extracted_from_report')})` : (formData.country ? ` (${t('entered_manually')})` : '')}</Typography>
+          <Typography><strong>{t('age_label')}:</strong> {formData.age}</Typography>
+          <Typography><strong>{t('province_label')}:</strong> {formData.province}</Typography>
+          <Typography><strong>{t('country_label')}:</strong> {formData.country}</Typography>
           <Typography><strong>{t('cancer_type_title')}:</strong> {formData.cancerType || t('not_specified')}</Typography>
 
           {surveyDefinition.map(q => {
@@ -790,7 +773,6 @@ function Survey({ onComplete }) {
             return (
               <Typography key={q.id}>
                 <strong>{q.title}:</strong> {Array.isArray(value) ? value.join(', ') : value}
-                {fieldOrigins[q.id] === 'ai' ? ` (${t('extracted_from_report')})` : ` (${t('entered_manually')})`}
               </Typography>
             );
           })}
@@ -862,7 +844,7 @@ function Survey({ onComplete }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setExitDialog(false)}>{t('cancel')}</Button>
-          <Button onClick={() => navigate('/')} color="error">{t('exit')}</Button>
+          <Button onClick={() => window.location.assign('https://breastcancercanada.ca')} color="error">{t('exit')}</Button>
         </DialogActions>
       </Dialog>
     </Card>

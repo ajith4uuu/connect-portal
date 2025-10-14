@@ -78,8 +78,8 @@ const resources = {
       analysis_title: "Report Analysis",
       analysis_text: "Based on your report, we extracted the following data:",
       extracted_from_report: "Extracted from report",
-      entered_manually: "Entered manually",
-      
+      entered_manually: "",
+
       // Stage selection
       stage_select_label: "Select Your Cancer Stage",
       select_stage: "Select your cancer stage",
@@ -123,7 +123,10 @@ const resources = {
       download_btn: "Download Your BCC Recommended Package",
       email_sent: "A copy of your responses has been sent to your email address.",
       start_new_survey: "Start New Survey",
-      
+      your_type_label: "Your type of Breast Cancer",
+      stage4_only_note: "This question applies only if Stage IV is selected.",
+      do_not_wish_to_continue: "I do not wish to continue",
+
       // Exit
       exit_survey: "Exit Survey",
       exit_text: "Are you sure you want to exit the survey? Your progress will be lost.",
@@ -257,7 +260,10 @@ const resources = {
       download_btn: "Télécharger votre ensemble de recommandations",
       email_sent: "Une copie de vos réponses a été envoyée à votre courriel.",
       start_new_survey: "Commencer une nouvelle enquête",
-      
+      your_type_label: "Votre type de cancer du sein",
+      stage4_only_note: "Cette question s'applique uniquement si le stade IV est sélectionné.",
+      do_not_wish_to_continue: "Je ne souhaite pas continuer",
+
       // Exit
       exit_survey: "Quitter l'enquête",
       exit_text: "Êtes-vous sûr de vouloir quitter? Votre progression sera perdue.",
