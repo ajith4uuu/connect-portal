@@ -400,113 +400,68 @@ function extractDataFromText(txt) {
 }
 
 function calculateStageFromBiomarkers(data) {
-  const erPos = data.ERPR && data.ERPR.includes('ER+');
-  const prPos = data.ERPR && data.ERPR.includes('PR+');
-  const her2High = data.HER2 && data.HER2.includes('(3+)');
-  const her2Low = data.HER2 && data.HER2.includes('(1+ or 2+)');
-  const brcaPos = data.BRCA && (data.BRCA.includes('BRCA1+') || data.BRCA.includes('BRCA2+'));
-  
-  // Advanced stage calculation based on biomarkers
-  if (erPos && her2High) return 'Stage II ER+/PR+/HER2+';
-  if (erPos && her2Low) return 'Stage II ER+/PR+/HER2 Low';
-  if (erPos && !her2High && !her2Low) return 'Stage II ER+/PR+';
+  const erPos = !!(data.ERPR && data.ERPR.includes('ER+'));
+  const prPos = !!(data.ERPR && data.ERPR.includes('PR+'));
+  const anyHrPos = erPos || prPos;
+  const her2High = !!(data.HER2 && data.HER2.includes('(3+)'));
+  const her2Low = !!(data.HER2 && data.HER2.includes('(1+ or 2+)'));
+  const brcaPos = !!(data.BRCA && (data.BRCA.includes('BRCA1+') || data.BRCA.includes('BRCA2+') || /\bBRCA\+/.test(data.BRCA)));
+
+  // Default to plain Stage II if we can't infer a composite label
+  if (anyHrPos && her2High) return 'Stage II ER+/PR+/HER2+';
+  if (anyHrPos && her2Low) return 'Stage II ER+/PR+/HER2 Low';
+  if (anyHrPos && !her2High && !her2Low) return 'Stage II ER+/PR+';
+  if (her2High && !anyHrPos) return 'Stage II HER-2+';
   if (brcaPos) return 'Stage II BRCA+';
-  if (her2High) return 'Stage II HER-2+';
-  if (!erPos && !prPos && !her2High) return 'Stage II TNBC';
-  
+  if (!anyHrPos && !her2High) return 'Stage II TNBC';
   return 'Stage II';
 }
 
 function computePackages(userStage, resp) {
   const pkgs = [];
-  
-  if (userStage.includes('Stage IV')) {
-    if (userStage.includes('ER+/PR+') && userStage.includes('HER2+')) {
-      pkgs.push('Stage IV ER/PR+/HER2+ package');
-    }
-    else if (userStage.includes('ER+/PR+') && !userStage.includes('HER2+')) {
-      pkgs.push('Stage IV ER/PR+ package');
-    } 
-    else if (userStage.includes('HER-2+') && !userStage.includes('ER+/PR+')) {
-      pkgs.push('Stage IV HER-2+ package');
-    } 
-    else if (resp.BRCA && (resp.BRCA.includes('BRCA1+') || resp.BRCA.includes('BRCA2+'))) {
-      pkgs.push('Stage IV BRCA+ package');
-    } 
-    else {
-      pkgs.push('Core package for Stage IV');
-    }
-  } 
-  else if (userStage.includes('Stage III')) {
-    if (userStage.includes('BRCA+')) {
-      pkgs.push('Stage III BRCA+ package');
-    } 
-    else if (userStage.includes('ER+/PR+/HER2+')) {
-      pkgs.push('Stage III ER/PR+/HER2+ package');
-    } 
-    else if (userStage.includes('HER-2+')) {
-      pkgs.push('Stage III HER-2+ package');
-    } 
-    else if (userStage.includes('ER+/PR+')) {
-      pkgs.push('Stage III ER/PR+ package');
-    }
-    else if (userStage.includes('ER+/PR+/HER2 Low')) {
-      pkgs.push('Stage III ER/PR+/HER2 Low package');
-    }
-    else {
-      pkgs.push('Core package for Stage III (TNBC)');
-    }
-  } 
-  else if (userStage.includes('Stage II')) {
-    if (userStage.includes('BRCA+')) {
-      pkgs.push('Stage II BRCA+ package');
-    } 
-    else if (userStage.includes('ER+/PR+/HER2+')) {
-      pkgs.push('Stage II ER/PR+/HER2+ package');
-    } 
-    else if (userStage.includes('HER-2+')) {
-      pkgs.push('Stage II HER-2+ package');
-    } 
-    else if (userStage.includes('ER+/PR+')) {
-      pkgs.push('Stage II ER/PR+ package');
-    }
-    else if (userStage.includes('ER+/PR+/HER2 Low')) {
-      pkgs.push('Stage II ER/PR+/HER2 Low package');
-    }
-    else {
-      pkgs.push('Core package for Stage II (TNBC)');
-    }
-  } 
-  else if (userStage.includes('Stage I')) {
+  const baseStage = (userStage.match(/Stage\s+(0|I{1,3}|IV)/i) || ['',''])[0];
+  const erPos = !!(resp.ERPR && resp.ERPR.includes('ER+'));
+  const prPos = !!(resp.ERPR && resp.ERPR.includes('PR+'));
+  const anyHrPos = erPos || prPos;
+  const her2High = !!(resp.HER2 && resp.HER2.includes('(3+)'));
+  const her2Low = !!(resp.HER2 && resp.HER2.includes('(1+ or 2+)'));
+  const brcaPos = !!(resp.BRCA && /\+/.test(resp.BRCA));
+
+  if (/Stage IV/i.test(baseStage)) {
+    if (anyHrPos && her2High) pkgs.push('Stage IV ER/PR+/HER2+ package');
+    else if (anyHrPos) pkgs.push('Stage IV ER/PR+ package');
+    else if (her2High) pkgs.push('Stage IV HER-2+ package');
+    else if (brcaPos) pkgs.push('Stage IV BRCA+ package');
+    else pkgs.push('Core package for Stage IV');
+  } else if (/Stage III/i.test(baseStage)) {
+    if (brcaPos) pkgs.push('Stage III BRCA+ package');
+    else if (anyHrPos && her2High) pkgs.push('Stage III ER/PR+/HER2+ package');
+    else if (her2High) pkgs.push('Stage III HER-2+ package');
+    else if (anyHrPos && her2Low) pkgs.push('Stage III ER/PR+/HER2 Low package');
+    else if (anyHrPos) pkgs.push('Stage III ER/PR+ package');
+    else pkgs.push('Core package for Stage III (TNBC)');
+  } else if (/Stage II/i.test(baseStage)) {
+    if (brcaPos) pkgs.push('Stage II BRCA+ package');
+    else if (anyHrPos && her2High) pkgs.push('Stage II ER/PR+/HER2+ package');
+    else if (her2High) pkgs.push('Stage II HER-2+ package');
+    else if (anyHrPos && her2Low) pkgs.push('Stage II ER/PR+/HER2 Low package');
+    else if (anyHrPos) pkgs.push('Stage II ER/PR+ package');
+    else pkgs.push('Core package for Stage II (TNBC)');
+  } else if (/Stage I/i.test(baseStage)) {
     pkgs.push('Core package for Stage I');
-  } 
-  else if (userStage.includes('Stage 0') || userStage.includes('DCIS')) {
+  } else if (/Stage 0|DCIS/i.test(baseStage)) {
     pkgs.push('Core package for DCIS / Stage 0');
   }
-  
+
   // Add targeted therapies based on biomarkers
-  if (resp.BRCA && resp.BRCA.includes('+')) {
-    pkgs.push('PARP inhibitors');
-  }
-  if (resp.HER2 && resp.HER2.includes('(3+)')) {
-    pkgs.push('HER2-targeted therapy');
-  }
-  if (resp.PIK3CA && /Positive/i.test(resp.PIK3CA)) {
-    pkgs.push('PIK3CA-Targeted Therapy');
-  }
-  if (resp.ESR1 && /Positive/i.test(resp.ESR1)) {
-    pkgs.push('ESR1-Targeted Therapy');
-  }
-  if (resp.PDL1 && /High/i.test(resp.PDL1)) {
-    pkgs.push('PD-L1 Immunotherapy');
-  }
-  if (resp.MSI && /High/i.test(resp.MSI)) {
-    pkgs.push('MSI-High Targeted Therapy');
-  }
-  if (resp.AKT1 && /Mutation/i.test(resp.AKT1)) {
-    pkgs.push('AKT1 Inhibitors');
-  }
-  
+  if (brcaPos) pkgs.push('PARP inhibitors');
+  if (her2High) pkgs.push('HER2-targeted therapy');
+  if (resp.PIK3CA && /Positive/i.test(resp.PIK3CA)) pkgs.push('PIK3CA-Targeted Therapy');
+  if (resp.ESR1 && /Positive/i.test(resp.ESR1)) pkgs.push('ESR1-Targeted Therapy');
+  if (resp.PDL1 && /High/i.test(resp.PDL1)) pkgs.push('PD-L1 Immunotherapy');
+  if (resp.MSI && /High/i.test(resp.MSI)) pkgs.push('MSI-High Targeted Therapy');
+  if (resp.AKT1 && /Mutation/i.test(resp.AKT1)) pkgs.push('AKT1 Inhibitors');
+
   return pkgs;
 }
 
@@ -517,8 +472,9 @@ function getPdfLink(userStage, resp) {
   }
   
   // Advanced matching based on biomarkers for compound stages
-  const erPos = resp.ERPR?.includes('ER+');
-  const prPos = resp.ERPR?.includes('PR+');
+  const erPos = !!(resp.ERPR && resp.ERPR.includes('ER+'));
+  const prPos = !!(resp.ERPR && resp.ERPR.includes('PR+'));
+  const anyHrPos = erPos || prPos;
   const her2High = resp.HER2?.includes('(3+)');
   const her2Low = resp.HER2?.includes('(1+ or 2+)');
   const brcaPos = resp.BRCA?.includes('+');
@@ -527,19 +483,19 @@ function getPdfLink(userStage, resp) {
   const baseStage = userStage.split(' ').slice(0, 2).join(' '); // Get "Stage X"
   
   if (baseStage === 'Stage II' || baseStage === 'Stage III' || baseStage === 'Stage IV') {
-    if (erPos && prPos && her2High) {
+    if (anyHrPos && her2High) {
       const key = `${baseStage} ER+/PR+/HER2+`;
       if (PDF_MAPPING[key]) return PDF_MAPPING[key];
     }
-    if (erPos && prPos && her2Low) {
+    if (anyHrPos && her2Low) {
       const key = `${baseStage} ER+/PR+/HER2 Low`;
       if (PDF_MAPPING[key]) return PDF_MAPPING[key];
     }
-    if (erPos && prPos && !her2High && !her2Low) {
+    if (anyHrPos && !her2High && !her2Low) {
       const key = `${baseStage} ER+/PR+`;
       if (PDF_MAPPING[key]) return PDF_MAPPING[key];
     }
-    if (her2High && !erPos && !prPos) {
+    if (her2High && !anyHrPos) {
       const key = `${baseStage} HER-2+`;
       if (PDF_MAPPING[key]) return PDF_MAPPING[key];
     }
@@ -547,7 +503,7 @@ function getPdfLink(userStage, resp) {
       const key = `${baseStage} BRCA+`;
       if (PDF_MAPPING[key]) return PDF_MAPPING[key];
     }
-    if (!erPos && !prPos && !her2High) {
+    if (!anyHrPos && !her2High) {
       const key = `${baseStage} TNBC`;
       if (PDF_MAPPING[key]) return PDF_MAPPING[key];
     }
