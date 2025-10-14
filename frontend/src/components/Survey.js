@@ -572,18 +572,6 @@ function Survey({ onComplete }) {
           <Box>
             <Typography variant="h5" gutterBottom>{t('analysis_title')}</Typography>
             
-            {extractedData && (
-              <Box sx={{ bgcolor: '#f8d7e4', p: 2, borderLeft: '4px solid #e5317a', mb: 3 }}>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  {t('analysis_text')}
-                </Typography>
-                <Typography>ER/PR: {extractedData.ERPR || t('not_tested')}</Typography>
-                <Typography>HER2: {extractedData.HER2 || t('not_tested')}</Typography>
-                <Typography>BRCA: {extractedData.BRCA || t('not_tested')}</Typography>
-                <Typography>Stage: {extractedData.stage || t('not_detected')}</Typography>
-              </Box>
-            )}
-            
             <FormControl fullWidth error={!!errors.stage}>
               <FormLabel>{t('stage_select_label')} *</FormLabel>
               <Select
