@@ -45,15 +45,29 @@ function Header() {
             sx={{
               backgroundColor: 'white',
               borderRadius: '24px',
+              border: '1px solid #e0e0e0',
+              p: 0.25,
               '& .MuiToggleButton-root': {
                 color: '#0e3b33',
-                border: '1px solid #e0e0e0',
+                borderRadius: '24px',
+                border: 0,
                 px: 1.5,
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: '#f0f0f0'
+                },
                 '&.Mui-selected': {
                   backgroundColor: '#f8d7e4',
                   color: '#0e3b33',
                   fontWeight: 700
                 }
+              },
+              '& .MuiToggleButtonGroup-grouped': {
+                borderRadius: '24px !important'
+              },
+              '& .MuiToggleButtonGroup-grouped:not(:first-of-type)': {
+                marginLeft: 0,
+                borderLeft: '1px solid #e0e0e0'
               }
             }}
           >
