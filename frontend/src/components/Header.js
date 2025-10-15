@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  AppBar, Toolbar, Typography, Select, MenuItem,
-  FormControl, Box
+  AppBar, Toolbar, Typography, ToggleButtonGroup, ToggleButton,
+  Box, Tooltip
 } from '@mui/material';
 
 function Header() {
@@ -28,23 +28,34 @@ function Header() {
           </Typography>
         </Box>
 
-        <FormControl variant="outlined" size="small">
-          <Select
-            value={currentLang}
-            onChange={handleLanguageChange}
-            sx={{
-              backgroundColor: 'white',
+        <ToggleButtonGroup
+          exclusive
+          value={currentLang}
+          onChange={(_, val) => val && i18n.changeLanguage(val)}
+          size="small"
+          aria-label="Language"
+          sx={{
+            backgroundColor: 'white',
+            borderRadius: '24px',
+            '& .MuiToggleButton-root': {
               color: '#0e3b33',
-              fontWeight: 500,
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#ccc'
+              border: '1px solid #e0e0e0',
+              px: 1.5,
+              '&.Mui-selected': {
+                backgroundColor: '#f8d7e4',
+                color: '#0e3b33',
+                fontWeight: 700
               }
-            }}
-          >
-            <MenuItem value="en">English</MenuItem>
-            <MenuItem value="fr">Français</MenuItem>
-          </Select>
-        </FormControl>
+            }
+          }}
+        >
+          <Tooltip title="English (Canada)">
+            <ToggleButton value="en" aria-label="English (Canada)">EN (CA)</ToggleButton>
+          </Tooltip>
+          <Tooltip title="Français (Québec)">
+            <ToggleButton value="fr" aria-label="Français (Québec)">FR (QC)</ToggleButton>
+          </Tooltip>
+        </ToggleButtonGroup>
       </Toolbar>
     </AppBar>
   );
