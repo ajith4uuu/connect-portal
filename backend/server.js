@@ -410,6 +410,7 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
             fieldTimestamps[key] = fileDate;
           }
         }
+        processedCount += 1;
       } catch (docError) {
         console.error('Document AI processing error:', docError);
       }
