@@ -418,7 +418,15 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
     if (!combinedData.stage || combinedData.stage === t.not_available) {
       combinedData.stage = calculateStageFromBiomarkers(combinedData);
     }
-    
+
+    // Default missing biomarkers to "Not tested"
+    const biomarkerKeys = ['ERPR','HER2','luminal','BRCA','PIK3CA','ESR1','PDL1','MSI','Ki67','PTEN','AKT1'];
+    for (const k of biomarkerKeys) {
+      if (!combinedData[k] || String(combinedData[k]).trim() === '') {
+        combinedData[k] = t.not_tested;
+      }
+    }
+
     res.json({ success: true, data: combinedData });
   } catch (error) {
     console.error('Upload error:', error);
