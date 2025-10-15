@@ -242,6 +242,16 @@ function extractDataFromText(txt) {
       break;
     }
   }
+  // Fallback: variant strings or association phrases
+  if (BRCA === t.not_available) {
+    if (/BRCA2[^\n]{0,160}(?:c\.|mutation|deleterious|pathogenic|germline)/i || /BRCA2\-associated/i) {
+      BRCA = 'BRCA2+';
+    } else if (/BRCA1[^\n]{0,160}(?:c\.|mutation|deleterious|pathogenic|germline)/i || /BRCA1\-associated/i) {
+      BRCA = 'BRCA1+';
+    } else if (/no\s+(?:clinically\s+significant\s+)?mutation\s+identified/i || /no\s+mutation\s+detected/i) {
+      BRCA = 'Negative';
+    }
+  }
 
   // PIK3CA EXTRACTION
   let PIK3CA = t.not_available;
