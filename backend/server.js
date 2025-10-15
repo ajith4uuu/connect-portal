@@ -15,7 +15,7 @@ const nodemailer = require('nodemailer');
 const { VertexAI } = require('@google-cloud/aiplatform');
 
 const translations = require('./translations');
-const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, getPdfKey, parseReportDate } = require('./utils');
+const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, getPdfKey, parseReportDate, detectReportType } = require('./utils');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -375,8 +375,15 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
         const text = document.text || '';
 
         // Extract data from text
-        const fileData = extractDataFromText(text);
+        const fileDataRaw = extractDataFromText(text);
+        const reportType = detectReportType(text);
         const fileDate = parseReportDate(text) || new Date();
+
+        // Whitelist fields per report type: genetics only contributes BRCA; pathology contributes demographics and biomarkers (excluding BRCA)
+        const GENETIC_FIELDS = ['BRCA'];
+        const PATHOLOGY_FIELDS = ['province','age','country','stage','ERPR','HER2','luminal','PIK3CA','ESR1','PDL1','MSI','Ki67','PTEN','AKT1'];
+        const allowed = reportType === 'genetic' ? GENETIC_FIELDS : PATHOLOGY_FIELDS;
+        const fileData = Object.fromEntries(Object.entries(fileDataRaw).filter(([k]) => allowed.includes(k)));
 
         // Merge with combined data, preferring meaningful and latest per-field
         for (const key in fileData) {
