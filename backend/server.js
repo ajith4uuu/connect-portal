@@ -347,6 +347,7 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
     }
 
     // Process each file
+    let processedCount = 0;
     for (const file of req.files) {
       const fileName = `reports/${Date.now()}_${file.originalname}`;
       const blob = bucket.file(fileName);
