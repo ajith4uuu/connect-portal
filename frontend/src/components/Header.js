@@ -4,6 +4,7 @@ import {
   AppBar, Toolbar, Typography, ToggleButtonGroup, ToggleButton,
   Box, Tooltip
 } from '@mui/material';
+import { Language as LanguageIcon } from '@mui/icons-material';
 
 function Header() {
   const { i18n } = useTranslation();
@@ -28,34 +29,42 @@ function Header() {
           </Typography>
         </Box>
 
-        <ToggleButtonGroup
-          exclusive
-          value={currentLang}
-          onChange={(_, val) => val && i18n.changeLanguage(val)}
-          size="small"
-          aria-label="Language"
-          sx={{
-            backgroundColor: 'white',
-            borderRadius: '24px',
-            '& .MuiToggleButton-root': {
-              color: '#0e3b33',
-              border: '1px solid #e0e0e0',
-              px: 1.5,
-              '&.Mui-selected': {
-                backgroundColor: '#f8d7e4',
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <LanguageIcon fontSize="small" sx={{ color: '#fff' }} />
+            <Typography id="lang-toggle-label" variant="body2" sx={{ color: '#fff', fontWeight: 600 }}>
+              Language
+            </Typography>
+          </Box>
+          <ToggleButtonGroup
+            exclusive
+            value={currentLang}
+            onChange={(_, val) => val && i18n.changeLanguage(val)}
+            size="small"
+            aria-labelledby="lang-toggle-label"
+            sx={{
+              backgroundColor: 'white',
+              borderRadius: '24px',
+              '& .MuiToggleButton-root': {
                 color: '#0e3b33',
-                fontWeight: 700
+                border: '1px solid #e0e0e0',
+                px: 1.5,
+                '&.Mui-selected': {
+                  backgroundColor: '#f8d7e4',
+                  color: '#0e3b33',
+                  fontWeight: 700
+                }
               }
-            }
-          }}
-        >
-          <Tooltip title="English (Canada)">
-            <ToggleButton value="en" aria-label="English (Canada)">EN (CA)</ToggleButton>
-          </Tooltip>
-          <Tooltip title="Français (Québec)">
-            <ToggleButton value="fr" aria-label="Français (Québec)">FR (QC)</ToggleButton>
-          </Tooltip>
-        </ToggleButtonGroup>
+            }}
+          >
+            <Tooltip title="English (Canada)">
+              <ToggleButton value="en" aria-label="English (Canada)">EN (CA)</ToggleButton>
+            </Tooltip>
+            <Tooltip title="Français (Québec)">
+              <ToggleButton value="fr" aria-label="Français (Québec)">FR (QC)</ToggleButton>
+            </Tooltip>
+          </ToggleButtonGroup>
+        </Box>
       </Toolbar>
     </AppBar>
   );
