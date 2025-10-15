@@ -33,17 +33,33 @@ function extractDataFromText(txt) {
     return m && m[1] ? m[1].trim() : t.not_available; 
   }
   
-  // AGE EXTRACTION
+  // AGE EXTRACTION (avoid matching risk tables like "to age 80")
   let age = t.not_available;
-  const ageMatch = txt.match(/\bAge\s*[:\-]?\s*(\d+)\b/i) || 
-                  txt.match(/\bDOB\b.*?(\d{2,4})\b/i) || 
-                  txt.match(/\bDate\s*of\s*Birth\b.*?(\d{2,4})\b/i);
+  const ageCandidates = [
+    /Patient'?s\s+age\s*[:\-]?\s*(\d{1,3})\b/i,
+    /Age\s*(?:at\s+(?:diagnosis|dx)|at\s+breast\s+cancer\s+diagnosis)?\s*[:\-]?\s*(\d{1,3})\b/i,
+    /\bAge\s*[:\-]\s*(\d{1,3})\b(?![^\n]{0,10}\b(?:risk|score|to)\b)/i
+  ];
+  let ageMatch = null;
+  for (const re of ageCandidates) {
+    const m = txt.match(re);
+    if (m && m[1]) { ageMatch = m; break; }
+  }
   if (ageMatch && ageMatch[1]) {
-    const currentYear = new Date().getFullYear();
-    const year = parseInt(ageMatch[1]);
-    age = (year > 1900 && year <= currentYear) ? 
-          (currentYear - year).toString() : 
-          year.toString();
+    const value = parseInt(ageMatch[1], 10);
+    if (!isNaN(value) && value > 0 && value < 120) {
+      age = String(value);
+    }
+  } else {
+    // Derive from year of birth if present
+    const yearMatch = txt.match(/\bDOB\b[^\d]{0,20}(\d{4})\b/i) || txt.match(/Date\s*of\s*Birth[^\d]{0,20}(\d{4})\b/i);
+    if (yearMatch && yearMatch[1]) {
+      const currentYear = new Date().getFullYear();
+      const year = parseInt(yearMatch[1], 10);
+      if (year > 1900 && year <= currentYear) {
+        age = String(currentYear - year);
+      }
+    }
   } 
   
   // PROVINCE EXTRACTION
@@ -527,11 +543,18 @@ function parseReportDate(txt) {
   return null;
 }
 
+function detectReportType(txt) {
+  const geneticHints = /(myrisk|myriad genetics|genetic\s+result|germline|clinically\s+significant\s+mutation|BRCA\s*[12]?\s*c\.|Heterozygous)/i;
+  if (geneticHints.test(txt)) return 'genetic';
+  return 'pathology';
+}
+
 module.exports = {
   extractDataFromText,
   calculateStageFromBiomarkers,
   computePackages,
   getPdfLink,
   getPdfKey,
-  parseReportDate
+  parseReportDate,
+  detectReportType
 };
