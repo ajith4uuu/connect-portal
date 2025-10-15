@@ -15,7 +15,7 @@ const nodemailer = require('nodemailer');
 const { VertexAI } = require('@google-cloud/aiplatform');
 
 const translations = require('./translations');
-const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, getPdfKey, parseReportDate } = require('./utils');
+const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, getPdfKey, parseReportDate, detectReportType } = require('./utils');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -347,6 +347,7 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
     }
 
     // Process each file
+    let processedCount = 0;
     for (const file of req.files) {
       const fileName = `reports/${Date.now()}_${file.originalname}`;
       const blob = bucket.file(fileName);
@@ -375,8 +376,15 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
         const text = document.text || '';
 
         // Extract data from text
-        const fileData = extractDataFromText(text);
+        const fileDataRaw = extractDataFromText(text);
+        const reportType = detectReportType(text);
         const fileDate = parseReportDate(text) || new Date();
+
+        // Whitelist fields per report type: genetics only contributes BRCA; pathology contributes demographics and biomarkers (excluding BRCA)
+        const GENETIC_FIELDS = ['BRCA'];
+        const PATHOLOGY_FIELDS = ['province','age','country','stage','ERPR','HER2','luminal','PIK3CA','ESR1','PDL1','MSI','Ki67','PTEN','AKT1'];
+        const allowed = reportType === 'genetic' ? GENETIC_FIELDS : PATHOLOGY_FIELDS;
+        const fileData = Object.fromEntries(Object.entries(fileDataRaw).filter(([k]) => allowed.includes(k)));
 
         // Merge with combined data, preferring meaningful and latest per-field
         for (const key in fileData) {
@@ -402,6 +410,7 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
             fieldTimestamps[key] = fileDate;
           }
         }
+        processedCount += 1;
       } catch (docError) {
         console.error('Document AI processing error:', docError);
       }
@@ -411,7 +420,17 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
     if (!combinedData.stage || combinedData.stage === t.not_available) {
       combinedData.stage = calculateStageFromBiomarkers(combinedData);
     }
-    
+
+    // Default missing biomarkers to "Not tested" only if at least one report was processed
+    if (processedCount > 0) {
+      const biomarkerKeys = ['ERPR','HER2','luminal','BRCA','PIK3CA','ESR1','PDL1','MSI','Ki67','PTEN','AKT1'];
+      for (const k of biomarkerKeys) {
+        if (!combinedData[k] || String(combinedData[k]).trim() === '') {
+          combinedData[k] = t.not_tested;
+        }
+      }
+    }
+
     res.json({ success: true, data: combinedData });
   } catch (error) {
     console.error('Upload error:', error);

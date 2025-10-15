@@ -1,9 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  AppBar, Toolbar, Typography, Select, MenuItem,
-  FormControl, Box
+  AppBar, Toolbar, Typography, ToggleButtonGroup, ToggleButton,
+  Box, Tooltip
 } from '@mui/material';
+import { Language as LanguageIcon } from '@mui/icons-material';
 
 function Header() {
   const { i18n } = useTranslation();
@@ -28,23 +29,56 @@ function Header() {
           </Typography>
         </Box>
 
-        <FormControl variant="outlined" size="small">
-          <Select
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <LanguageIcon fontSize="small" sx={{ color: '#fff' }} />
+            <Typography id="lang-toggle-label" variant="body2" sx={{ color: '#fff', fontWeight: 600 }}>
+              Language
+            </Typography>
+          </Box>
+          <ToggleButtonGroup
+            exclusive
             value={currentLang}
-            onChange={handleLanguageChange}
+            onChange={(_, val) => val && i18n.changeLanguage(val)}
+            size="small"
+            aria-labelledby="lang-toggle-label"
             sx={{
               backgroundColor: 'white',
-              color: '#0e3b33',
-              fontWeight: 500,
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#ccc'
+              borderRadius: '24px',
+              border: '1px solid #e0e0e0',
+              p: 0.25,
+              '& .MuiToggleButton-root': {
+                color: '#0e3b33',
+                borderRadius: '24px',
+                border: 0,
+                px: 1.5,
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: '#f0f0f0'
+                },
+                '&.Mui-selected': {
+                  backgroundColor: '#f8d7e4',
+                  color: '#0e3b33',
+                  fontWeight: 700
+                }
+              },
+              '& .MuiToggleButtonGroup-grouped': {
+                borderRadius: '24px !important'
+              },
+              '& .MuiToggleButtonGroup-grouped:not(:first-of-type)': {
+                marginLeft: 0,
+                borderLeft: '1px solid #e0e0e0'
               }
             }}
           >
-            <MenuItem value="en">English</MenuItem>
-            <MenuItem value="fr">Français</MenuItem>
-          </Select>
-        </FormControl>
+            <Tooltip title="English (Canada)">
+              <ToggleButton value="en" aria-label="English (Canada)">EN (CA)</ToggleButton>
+            </Tooltip>
+            <Tooltip title="Français (Québec)">
+              <ToggleButton value="fr" aria-label="Français (Québec)">FR (QC)</ToggleButton>
+            </Tooltip>
+          </ToggleButtonGroup>
+        </Box>
       </Toolbar>
     </AppBar>
   );
