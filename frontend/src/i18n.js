@@ -316,12 +316,14 @@ i18n
     }
   });
 
-// Load backend translations on init
-['en', 'fr'].forEach(async (lang) => {
-  const translations = await loadTranslations(lang);
-  if (translations) {
-    i18n.addResourceBundle(lang, 'translation', translations, true, true);
-  }
-});
+// Load backend translations on init (only if API_URL is configured)
+if (API_URL) {
+  ['en', 'fr'].forEach(async (lang) => {
+    const translations = await loadTranslations(lang);
+    if (translations) {
+      i18n.addResourceBundle(lang, 'translation', translations, true, true);
+    }
+  });
+}
 
 export default i18n;
