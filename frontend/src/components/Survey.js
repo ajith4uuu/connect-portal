@@ -593,6 +593,7 @@ function Survey({ onComplete }) {
                 <MenuItem value="United States">{t('usa')}</MenuItem>
                 <MenuItem value="Other">{t('other')}</MenuItem>
               </Select>
+              {fieldOrigins.country === 'ai' && <FormHelperText>Extracted from your report by AI</FormHelperText>}
             </FormControl>
           </Box>
         );
