@@ -54,6 +54,9 @@ function Survey({ onComplete }) {
   // Track field origins (ai or user)
   const [fieldOrigins, setFieldOrigins] = useState({});
 
+  // Track selected PDF for Lobular carcinoma
+  const [selectedPdfName, setSelectedPdfName] = useState('');
+
   // Stepper scrolling refs
   const stepperScrollRef = useRef(null);
   const stepRefs = useRef([]);
