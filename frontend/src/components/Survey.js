@@ -355,6 +355,33 @@ function Survey({ onComplete }) {
     container.scrollBy({ left: amount, behavior: 'smooth' });
   };
 
+  // Auto-scroll stepper to keep active step visible
+  useEffect(() => {
+    const container = stepperScrollRef.current;
+    const activeStepElement = stepRefs.current[activeStep];
+
+    if (!container || !activeStepElement) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const stepRect = activeStepElement.getBoundingClientRect();
+
+    // Check if step is outside visible area and scroll if needed
+    const isLeftOutside = stepRect.left < containerRect.left;
+    const isRightOutside = stepRect.right > containerRect.right;
+
+    if (isLeftOutside) {
+      container.scrollBy({
+        left: stepRect.left - containerRect.left - 50,
+        behavior: 'smooth'
+      });
+    } else if (isRightOutside) {
+      container.scrollBy({
+        left: stepRect.right - containerRect.right + 50,
+        behavior: 'smooth'
+      });
+    }
+  }, [activeStep]);
+
 
   const renderStepContent = () => {
     switch(activeStep) {
