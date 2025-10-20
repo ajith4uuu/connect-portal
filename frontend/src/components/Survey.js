@@ -642,7 +642,21 @@ function Survey({ onComplete }) {
               <FormLabel component="legend">{`${t('cancer_type_question')} *`}</FormLabel>
               <RadioGroup
                 value={formData.cancerType}
-                onChange={(e) => { setFormData({ ...formData, cancerType: e.target.value }); setFieldOrigins(prev => ({ ...prev, cancerType: 'user' })); } }
+                onChange={(e) => {
+                  const selectedType = e.target.value;
+                  setFormData({ ...formData, cancerType: selectedType });
+                  setFieldOrigins(prev => ({ ...prev, cancerType: 'user' }));
+
+                  // If Lobular is selected, compute the PDF name based on stage
+                  if (selectedType === t('cancer_type_lobular') && formData.stage) {
+                    const pdfName = LOBULAR_PDF_MAP[formData.stage];
+                    if (pdfName) {
+                      setSelectedPdfName(pdfName);
+                    }
+                  } else {
+                    setSelectedPdfName('');
+                  }
+                }}
               >
                 <FormControlLabel value={t('cancer_type_ductal')} control={<Radio />} label={t('cancer_type_ductal')} />
                 <FormControlLabel value={t('cancer_type_lobular')} control={<Radio />} label={t('cancer_type_lobular')} />
