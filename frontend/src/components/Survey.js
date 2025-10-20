@@ -18,11 +18,26 @@ const DOC_API_URL = process.env.REACT_APP_DOC_API_URL || '';
 
 // Lobular carcinoma PDF mapping by stage
 const LOBULAR_PDF_MAP = {
-  'DCIS / Stage 0': 'LCIS',
-  'Stage I': 'Stage 1 Lobular',
-  'Stage II': 'Stage II Lobular',
-  'Stage III': 'Stage III Lobular',
-  'Stage IV': 'Stage IV Lobular'
+  'DCIS / Stage 0': {
+    name: 'LCIS',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_CARCINOMA_IN-SITU_(LCIS)_2.pdf'
+  },
+  'Stage I': {
+    name: 'Stage 1 Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/STAGE_1_LOBULAR_BREAST_CANCER_2.pdf'
+  },
+  'Stage II': {
+    name: 'Stage II Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_II_2.pdf'
+  },
+  'Stage III': {
+    name: 'Stage III Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_III_2.pdf'
+  },
+  'Stage IV': {
+    name: 'Stage IV Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/Stage_IV_ILC_Breast_Cancer_2.pdf'
+  }
 };
 
 function Survey({ onComplete }) {
