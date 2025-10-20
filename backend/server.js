@@ -501,6 +501,7 @@ app.post('/api/submit', async (req, res) => {
       spread_locations: Array.isArray(answers.spread) ? answers.spread : [],
       treatment_packages: packages,
       pdf_url: pdfUrl || null,
+      lobular_pdf_name: lobularPdfName || null,
       ai_summary: aiSummary || null,
       extracted_data: JSON.stringify(extracted),
       raw_responses: JSON.stringify(answers)
