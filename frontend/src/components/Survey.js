@@ -704,6 +704,7 @@ function Survey({ onComplete }) {
                 ))}
               </Select>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
+              {fieldOrigins[question.id] === 'ai' && <FormHelperText>Extracted from your report by AI</FormHelperText>}
             </FormControl>
           </Box>
         );
