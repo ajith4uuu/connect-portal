@@ -25,13 +25,13 @@ const PDF_MAPPING = {
   'Stage IV BRCA+': 'https://drive.google.com/file/d/1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/view'
 };
 
-// Lobular carcinoma PDF mapping
+// Lobular carcinoma PDF mapping - direct URLs from GCS
 const LOBULAR_PDF_MAPPING = {
-  'LCIS': 'LCIS_PDF.pdf',
-  'Stage 1 Lobular': 'Stage_1_Lobular.pdf',
-  'Stage II Lobular': 'Stage_II_Lobular.pdf',
-  'Stage III Lobular': 'Stage_III_Lobular.pdf',
-  'Stage IV Lobular': 'Stage_IV_Lobular.pdf'
+  'LCIS': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_CARCINOMA_IN-SITU_(LCIS)_2.pdf',
+  'Stage 1 Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/STAGE_1_LOBULAR_BREAST_CANCER_2.pdf',
+  'Stage II Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_II_2.pdf',
+  'Stage III Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_III_2.pdf',
+  'Stage IV Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/Stage_IV_ILC_Breast_Cancer_2.pdf'
 };
 
 function extractDataFromText(txt) {
