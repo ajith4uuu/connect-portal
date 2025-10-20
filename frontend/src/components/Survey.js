@@ -811,15 +811,15 @@ function Survey({ onComplete }) {
     return (
       <Box>
         <Typography variant="h5" gutterBottom>{t('review_title')}</Typography>
-        
+
         <Box sx={{ bgcolor: '#f8d7e4', p: 2, borderLeft: '4px solid #e5317a', mb: 3 }}>
           <Typography variant="subtitle1">
             {t('selected_stage')}: <strong>{formData.stage}</strong>
           </Typography>
         </Box>
-        
+
         <Typography variant="h6" gutterBottom>{t('your_responses')}</Typography>
-        
+
         <Box sx={{ mb: 3 }}>
           <Typography><strong>{t('email_label')}:</strong> {formData.email}</Typography>
           <Typography><strong>{t('age_label')}:</strong> {formData.age}</Typography>
@@ -827,10 +827,16 @@ function Survey({ onComplete }) {
           <Typography><strong>{t('country_label')}:</strong> {formData.country}</Typography>
           <Typography><strong>{t('cancer_type_title')}:</strong> {formData.cancerType || t('not_specified')}</Typography>
 
+          {selectedPdfName && (
+            <Typography sx={{ mt: 2, p: 1, bgcolor: '#e8f5e9', borderRadius: 1 }}>
+              <strong>{t('cancer_type_lobular')} {t('package')}:</strong> {selectedPdfName}
+            </Typography>
+          )}
+
           {surveyDefinition.map(q => {
             const value = formData[q.id];
             if (!value) return null;
-            
+
             return (
               <Typography key={q.id}>
                 <strong>{q.title}:</strong> {Array.isArray(value) ? value.join(', ') : value}
@@ -838,7 +844,7 @@ function Survey({ onComplete }) {
             );
           })}
         </Box>
-        
+
         {submitting && (
           <Box sx={{ mb: 2 }}>
             <LinearProgress />
