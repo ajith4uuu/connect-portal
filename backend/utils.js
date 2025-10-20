@@ -589,5 +589,7 @@ module.exports = {
   getPdfLink,
   getPdfKey,
   parseReportDate,
-  detectReportType
+  detectReportType,
+  getLobularPdfUrl,
+  LOBULAR_PDF_MAPPING
 };
