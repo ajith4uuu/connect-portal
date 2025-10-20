@@ -351,7 +351,7 @@ function Survey({ onComplete }) {
       const left = el.offsetLeft - container.clientWidth / 2 + el.clientWidth / 2;
       container.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
     }
-  }, [activeStep, surveyDefinition.length]);
+  }, [activeStep, surveyDefinition, filteredQuestions]);
 
   // Clamp activeStep if filtered steps shrink (e.g., hiding 'spread' when not Stage IV)
   useEffect(() => {
