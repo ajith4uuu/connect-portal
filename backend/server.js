@@ -457,7 +457,7 @@ app.post('/api/submit', async (req, res) => {
     // Get PDF link - use Lobular PDF if selected, otherwise use regular PDF
     let pdfUrl = '';
     if (lobularPdfName && LOBULAR_PDF_MAPPING[lobularPdfName]) {
-      pdfUrl = getLobularPdfUrl(LOBULAR_PDF_MAPPING[lobularPdfName]);
+      pdfUrl = LOBULAR_PDF_MAPPING[lobularPdfName];
     } else {
       pdfUrl = await resolvePdfUrl(userStage, extracted);
     }
