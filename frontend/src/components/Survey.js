@@ -663,11 +663,11 @@ function Survey({ onComplete }) {
                   setFormData({ ...formData, cancerType: selectedType });
                   setFieldOrigins(prev => ({ ...prev, cancerType: 'user' }));
 
-                  // If Lobular is selected, compute the PDF name based on stage
+                  // If Lobular is selected, compute the PDF name and URL based on stage
                   if (selectedType === t('cancer_type_lobular') && formData.stage) {
-                    const pdfName = LOBULAR_PDF_MAP[formData.stage];
-                    if (pdfName) {
-                      setSelectedPdfName(pdfName);
+                    const pdfMapping = LOBULAR_PDF_MAP[formData.stage];
+                    if (pdfMapping) {
+                      setSelectedPdfName(pdfMapping.name);
                     }
                   } else {
                     setSelectedPdfName('');
