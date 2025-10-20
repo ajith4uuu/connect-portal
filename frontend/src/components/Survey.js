@@ -16,6 +16,15 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL || '';
 const DOC_API_URL = process.env.REACT_APP_DOC_API_URL || '';
 
+// Lobular carcinoma PDF mapping by stage
+const LOBULAR_PDF_MAP = {
+  'DCIS / Stage 0': 'LCIS',
+  'Stage I': 'Stage 1 Lobular',
+  'Stage II': 'Stage II Lobular',
+  'Stage III': 'Stage III Lobular',
+  'Stage IV': 'Stage IV Lobular'
+};
+
 function Survey({ onComplete }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
