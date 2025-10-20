@@ -534,6 +534,20 @@ function getPdfLink(userStage, resp) {
   return PDF_MAPPING[baseStage] || '';
 }
 
+function getLobularPdfUrl(pdfName) {
+  if (!pdfName) return '';
+  const bucketName = process.env.GCS_PDF_BUCKET;
+  const bucketPath = process.env.GCS_BUCKET || 'bcc-documentai-pdfs';
+
+  if (bucketName) {
+    return `gs://${bucketName}/${pdfName}`;
+  } else if (bucketPath) {
+    return `gs://${bucketPath}/lobular/${pdfName}`;
+  }
+
+  return `https://storage.googleapis.com/${bucketPath}/lobular/${pdfName}`;
+}
+
 // Parse report/addendum/collection dates to help prefer most recent values when merging multiple uploads
 function parseReportDate(txt) {
   const datePatterns = [
