@@ -577,7 +577,7 @@ function Survey({ onComplete }) {
               value={formData.province}
               onChange={(e) => { setFormData({...formData, province: e.target.value}); setFieldOrigins(prev => ({ ...prev, province: 'user' })); }}
               error={!!errors.province}
-              helperText={errors.province}
+              helperText={errors.province || (fieldOrigins.province === 'ai' ? 'Extracted from your report by AI' : '')}
               placeholder={t('province_placeholder')}
               margin="normal"
             />
