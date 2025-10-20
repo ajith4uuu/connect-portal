@@ -25,6 +25,15 @@ const PDF_MAPPING = {
   'Stage IV BRCA+': 'https://drive.google.com/file/d/1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/view'
 };
 
+// Lobular carcinoma PDF mapping
+const LOBULAR_PDF_MAPPING = {
+  'LCIS': 'LCIS_PDF.pdf',
+  'Stage 1 Lobular': 'Stage_1_Lobular.pdf',
+  'Stage II Lobular': 'Stage_II_Lobular.pdf',
+  'Stage III Lobular': 'Stage_III_Lobular.pdf',
+  'Stage IV Lobular': 'Stage_IV_Lobular.pdf'
+};
+
 function extractDataFromText(txt) {
   const t = translations.en; // Always extract in English
   
