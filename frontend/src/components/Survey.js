@@ -805,11 +805,7 @@ function Survey({ onComplete }) {
             <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
               {[...staticSteps, ...filteredQuestions.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
                 <Step key={index}>
-                  <StepLabel>
-                    <span ref={(el) => { stepRefs.current[index] = el; }}>
-                      {index === activeStep ? label : ''}
-                    </span>
-                  </StepLabel>
+                  <StepLabel></StepLabel>
                 </Step>
               ))}
             </Stepper>
