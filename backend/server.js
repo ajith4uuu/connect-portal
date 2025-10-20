@@ -440,22 +440,27 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
 
 // Submit survey
 app.post('/api/submit', async (req, res) => {
-  const { extracted, answers, lang = 'en' } = req.body;
+  const { extracted, answers, lang = 'en', lobularPdfName } = req.body;
   const t = translations[lang] || translations.en;
-  
+
   try {
     // Generate unique ID
     const responseId = uuidv4();
-    
+
     // Determine stages
     const calculatedStage = calculateStageFromBiomarkers(extracted);
     const userStage = answers.stage || calculatedStage;
-    
+
     // Get treatment packages
     const packages = computePackages(userStage, extracted);
-    
-    // Get PDF link (prefer GCS if configured)
-    const pdfUrl = await resolvePdfUrl(userStage, extracted);
+
+    // Get PDF link - use Lobular PDF if selected, otherwise use regular PDF
+    let pdfUrl = '';
+    if (lobularPdfName && LOBULAR_PDF_MAPPING[lobularPdfName]) {
+      pdfUrl = getLobularPdfUrl(LOBULAR_PDF_MAPPING[lobularPdfName]);
+    } else {
+      pdfUrl = await resolvePdfUrl(userStage, extracted);
+    }
 
     // Generate AI summary
     let aiSummary = '';
