@@ -374,7 +374,7 @@ function Survey({ onComplete }) {
     if (activeStep > maxIndex) {
       setActiveStep(maxIndex);
     }
-  }, [totalSteps]);
+  }, [totalSteps, activeStep]);
 
   const scrollSteps = (dir) => {
     const container = stepperScrollRef.current;
