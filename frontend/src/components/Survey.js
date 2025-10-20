@@ -315,22 +315,23 @@ function Survey({ onComplete }) {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    
+
     // Collect all dynamic question answers
     const dynamicAnswers = {};
     surveyDefinition.forEach(q => {
       dynamicAnswers[q.id] = formData[q.id] || '';
     });
-    
+
     const submitData = {
       extracted: extractedData,
       answers: { ...formData, ...dynamicAnswers },
-      lang: i18n.language
+      lang: i18n.language,
+      lobularPdfName: selectedPdfName
     };
 
     try {
       const response = await axios.post(`${API_URL}/api/submit`, submitData);
-      
+
       if (response.data.success) {
         onComplete(response.data.data);
         navigate('/thank-you');
