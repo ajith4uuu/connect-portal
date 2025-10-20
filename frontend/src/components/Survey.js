@@ -617,6 +617,7 @@ function Survey({ onComplete }) {
                 <MenuItem value="Stage III">{t('stage3')}</MenuItem>
                 <MenuItem value="Stage IV">{t('stage4')}</MenuItem>
               </Select>
+              {fieldOrigins.stage === 'ai' && <FormHelperText>Extracted from your report by AI</FormHelperText>}
             </FormControl>
           </Box>
         );
