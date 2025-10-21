@@ -27,11 +27,11 @@ const PDF_MAPPING = {
 
 // Lobular carcinoma PDF mapping - direct URLs from GCS
 const LOBULAR_PDF_MAPPING = {
-  'LCIS': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_CARCINOMA_IN-SITU_(LCIS)_2.pdf',
-  'Stage 1 Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/STAGE_1_LOBULAR_BREAST_CANCER_2.pdf',
-  'Stage II Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_II_2.pdf',
-  'Stage III Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_III_2.pdf',
-  'Stage IV Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/Stage_IV_ILC_Breast_Cancer_2.pdf'
+  'Stage 0 Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_Stage0.pdf',
+  'Stage I Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_StageI.pdf',
+  'Stage II Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_StageII.pdf',
+  'Stage III Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_StageIII.pdf',
+  'Stage IV Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_StageIV.pdf'
 };
 
 // Biomarker-based PDF routing for non-Lobular cancers
