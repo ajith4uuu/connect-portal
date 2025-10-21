@@ -692,5 +692,7 @@ module.exports = {
   parseReportDate,
   detectReportType,
   getLobularPdfUrl,
-  LOBULAR_PDF_MAPPING
+  LOBULAR_PDF_MAPPING,
+  routePdfByBiomarker,
+  BIOMARKER_PDF_URLS
 };
