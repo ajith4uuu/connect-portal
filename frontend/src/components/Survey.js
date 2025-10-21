@@ -19,24 +19,24 @@ const DOC_API_URL = process.env.REACT_APP_DOC_API_URL || '';
 // Lobular carcinoma PDF mapping by stage
 const LOBULAR_PDF_MAP = {
   'DCIS / Stage 0': {
-    name: 'LCIS',
-    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_CARCINOMA_IN-SITU_(LCIS)_2.pdf'
+    name: 'Stage 0 Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_Stage0.pdf'
   },
   'Stage I': {
-    name: 'Stage 1 Lobular',
-    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/STAGE_1_LOBULAR_BREAST_CANCER_2.pdf'
+    name: 'Stage I Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_StageI.pdf'
   },
   'Stage II': {
     name: 'Stage II Lobular',
-    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_II_2.pdf'
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_StageII.pdf'
   },
   'Stage III': {
     name: 'Stage III Lobular',
-    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_III_2.pdf'
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_StageIII.pdf'
   },
   'Stage IV': {
     name: 'Stage IV Lobular',
-    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/Stage_IV_ILC_Breast_Cancer_2.pdf'
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_StageIV.pdf'
   }
 };
 
@@ -116,6 +116,18 @@ function Survey({ onComplete }) {
   useEffect(() => {
     loadSurveyDefinition();
   }, [loadSurveyDefinition]);
+
+  // Update Lobular PDF when stage changes (if Lobular is selected)
+  useEffect(() => {
+    if (formData.cancerType === t('cancer_type_lobular') && formData.stage) {
+      const pdfMapping = LOBULAR_PDF_MAP[formData.stage];
+      if (pdfMapping) {
+        setSelectedPdfName(pdfMapping.name);
+      } else {
+        setSelectedPdfName('');
+      }
+    }
+  }, [formData.stage, formData.cancerType, t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -639,12 +651,12 @@ function Survey({ onComplete }) {
         return (
           <Box>
             <Typography variant="h5" gutterBottom>{t('analysis_title')}</Typography>
-            
+
             <FormControl fullWidth error={!!errors.stage}>
               <FormLabel>{t('stage_select_label')} *</FormLabel>
               <Select
                 value={formData.stage}
-                onChange={(e) => setFormData({...formData, stage: e.target.value})}
+                onChange={(e) => { setFormData({...formData, stage: e.target.value}); setFieldOrigins(prev => ({ ...prev, stage: 'user' })); }}
                 displayEmpty
               >
                 <MenuItem value="">— {t('select_stage')} —</MenuItem>
