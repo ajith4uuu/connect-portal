@@ -337,11 +337,20 @@ function Survey({ onComplete }) {
       dynamicAnswers[q.id] = formData[q.id] || '';
     });
 
+    // Map biomarker fields from form data or dynamic answers for biomarker routing
+    const biomarkerData = {
+      ER_status: dynamicAnswers.ER || formData.ERPR || extractedData.ERPR || 'Unknown',
+      PR_status: dynamicAnswers.PR || formData.ERPR || extractedData.ERPR || 'Unknown',
+      HER2_status: dynamicAnswers.HER2 || formData.HER2 || extractedData.HER2 || 'Unknown',
+      BRCA_status: dynamicAnswers.BRCA || formData.BRCA || extractedData.BRCA || 'Unknown'
+    };
+
     const submitData = {
       extracted: extractedData,
       answers: { ...formData, ...dynamicAnswers },
       lang: i18n.language,
-      lobularPdfName: selectedPdfName
+      lobularPdfName: selectedPdfName,
+      biomarkers: biomarkerData
     };
 
     try {
