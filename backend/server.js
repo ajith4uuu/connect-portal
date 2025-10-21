@@ -549,6 +549,7 @@ app.post('/api/submit', async (req, res) => {
         userStage,
         calculatedStage,
         packages: packages.join('; '),
+        selectedPdfName: selectedPdfName,
         downloadUrl: pdfUrl,
         geminiSummary: aiSummary
       }
