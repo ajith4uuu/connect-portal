@@ -454,12 +454,27 @@ app.post('/api/submit', async (req, res) => {
     // Get treatment packages
     const packages = computePackages(userStage, extracted);
 
-    // Get PDF link - use Lobular PDF if selected, otherwise use regular PDF
+    // Get PDF link - use Lobular PDF if selected, otherwise use biomarker routing
     let pdfUrl = '';
+    let selectedPdfName = '';
     if (lobularPdfName && LOBULAR_PDF_MAPPING[lobularPdfName]) {
       pdfUrl = LOBULAR_PDF_MAPPING[lobularPdfName];
+      selectedPdfName = lobularPdfName;
     } else {
-      pdfUrl = await resolvePdfUrl(userStage, extracted);
+      // Use biomarker routing for non-Lobular cancers
+      const biomarkerRoute = routePdfByBiomarker(
+        userStage,
+        answers.ER_status || extracted.ER_status || 'Unknown',
+        answers.PR_status || extracted.PR_status || 'Unknown',
+        answers.HER2_status || extracted.HER2_status || 'Unknown',
+        answers.BRCA_status || extracted.BRCA_status || 'Unknown'
+      );
+      if (biomarkerRoute && biomarkerRoute.url) {
+        pdfUrl = biomarkerRoute.url;
+        selectedPdfName = biomarkerRoute.selected_pdf;
+      } else {
+        pdfUrl = await resolvePdfUrl(userStage, extracted);
+      }
     }
 
     // Generate AI summary
