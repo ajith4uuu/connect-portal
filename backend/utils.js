@@ -559,6 +559,96 @@ function getLobularPdfUrl(pdfName) {
   return LOBULAR_PDF_MAPPING[pdfName];
 }
 
+// Helper functions for biomarker routing
+function isPositive(value) {
+  return value === 'Positive' || value === 'positive';
+}
+
+function isUnknownish(value) {
+  const unknown = ['Unknown', 'Not Tested', 'Not Sure', 'unknown', 'not tested', 'not sure'];
+  return unknown.includes(value);
+}
+
+function her2IsPositive(value) {
+  // Treat HER2 "Low" as Negative for routing
+  if (value === 'Low' || value === 'low') return false;
+  return value === 'Positive' || value === 'positive';
+}
+
+function normalizeStageForBiomarker(stage) {
+  const stageStr = String(stage || '').trim();
+  if (stageStr.includes('Stage IV') || stageStr.includes('Stage 4')) return 'StageIV';
+  if (stageStr.includes('Stage III') || stageStr.includes('Stage 3')) return 'StageIII';
+  if (stageStr.includes('Stage II') || stageStr.includes('Stage 2')) return 'StageII';
+  if (stageStr.includes('Stage I') || stageStr.includes('Stage 1')) return 'StageI';
+  if (stageStr.includes('DCIS') || stageStr.includes('Stage 0')) return 'Stage0orDCIS';
+  return null;
+}
+
+// Biomarker-based PDF routing function
+function routePdfByBiomarker(stage, ER_status, PR_status, HER2_status, BRCA_status) {
+  const normalizedStage = normalizeStageForBiomarker(stage);
+  if (!normalizedStage) return null;
+
+  const ERp = isPositive(ER_status);
+  const PRp = isPositive(PR_status);
+  const HER2p = her2IsPositive(HER2_status);
+  const BRCAp = isPositive(BRCA_status);
+
+  const allUnknown =
+    isUnknownish(ER_status) &&
+    isUnknownish(PR_status) &&
+    isUnknownish(HER2_status) &&
+    isUnknownish(BRCA_status);
+
+  const selectPdf = (filename) => ({
+    selected_pdf: filename,
+    url: BIOMARKER_PDF_URLS[filename]
+  });
+
+  // If all biomarkers unknown/not tested, use core info PDF
+  if (allUnknown) {
+    switch(normalizedStage) {
+      case 'StageIV': return selectPdf('StageIV_BreastCancer_core_info.pdf');
+      case 'StageIII': return selectPdf('StageIII_BreastCancer_coreinfo.pdf');
+      case 'StageII': return selectPdf('StageII_BreastCancer _coreinfo.pdf');
+      case 'StageI': return selectPdf('Stagel_BreastCancer_coreinfo.pdf');
+      case 'Stage0orDCIS': return selectPdf('Stage0orDCIS_core info.pdf');
+    }
+  }
+
+  // Stage-specific routing rules
+  if (normalizedStage === 'StageIV') {
+    if ((ERp || PRp) && HER2p) return selectPdf('StageIV_BreastCancer_ER+PR+_HER2+.pdf');
+    if (ERp && PRp) return selectPdf('StageIV_BreastCancer_ER+_PR+.pdf');
+    if (HER2p) return selectPdf('StageIV_BreastCancer_HER2+.pdf');
+    return selectPdf('StageIV_BreastCancer_core_info.pdf');
+  }
+
+  if (normalizedStage === 'StageIII') {
+    if (BRCAp) return selectPdf('StageIII_BRCA+.pdf');
+    if ((ERp || PRp) && HER2p) return selectPdf('StageIII_ER+orPR+_HER2+.pdf');
+    if (HER2p) return selectPdf('StageIII_HER2+.pdf');
+    if (ERp || PRp) return selectPdf('StageIII_ER+orPR+.pdf');
+    return selectPdf('StageIII_BreastCancer_coreinfo.pdf');
+  }
+
+  if (normalizedStage === 'StageII') {
+    if (BRCAp) return selectPdf('StageII_BreastCancer_BRCA+.pdf');
+    if ((ERp || PRp) && HER2p) return selectPdf('StageII_ER+orPR+_HER2+.pdf');
+    if (HER2p) return selectPdf('StageII_HER2+.pdf');
+    if (ERp || PRp) return selectPdf('StageII_ER+orPR+.pdf');
+    return selectPdf('StageII_BreastCancer _coreinfo.pdf');
+  }
+
+  if (normalizedStage === 'StageI') {
+    return selectPdf('Stagel_BreastCancer_coreinfo.pdf');
+  }
+
+  // Stage 0/DCIS
+  return selectPdf('Stage0orDCIS_core info.pdf');
+}
+
 // Parse report/addendum/collection dates to help prefer most recent values when merging multiple uploads
 function parseReportDate(txt) {
   const datePatterns = [
