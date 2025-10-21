@@ -462,12 +462,17 @@ app.post('/api/submit', async (req, res) => {
       selectedPdfName = lobularPdfName;
     } else {
       // Use biomarker routing for non-Lobular cancers
+      const er_status = biomarkers?.ER_status || answers.ER_status || answers.ERPR || extracted.ER_status || extracted.ERPR || 'Unknown';
+      const pr_status = biomarkers?.PR_status || answers.PR_status || answers.ERPR || extracted.PR_status || extracted.ERPR || 'Unknown';
+      const her2_status = biomarkers?.HER2_status || answers.HER2_status || answers.HER2 || extracted.HER2_status || extracted.HER2 || 'Unknown';
+      const brca_status = biomarkers?.BRCA_status || answers.BRCA_status || answers.BRCA || extracted.BRCA_status || extracted.BRCA || 'Unknown';
+
       const biomarkerRoute = routePdfByBiomarker(
         userStage,
-        answers.ER_status || extracted.ER_status || 'Unknown',
-        answers.PR_status || extracted.PR_status || 'Unknown',
-        answers.HER2_status || extracted.HER2_status || 'Unknown',
-        answers.BRCA_status || extracted.BRCA_status || 'Unknown'
+        er_status,
+        pr_status,
+        her2_status,
+        brca_status
       );
       if (biomarkerRoute && biomarkerRoute.url) {
         pdfUrl = biomarkerRoute.url;
