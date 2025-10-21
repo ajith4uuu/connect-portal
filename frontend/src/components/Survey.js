@@ -651,12 +651,12 @@ function Survey({ onComplete }) {
         return (
           <Box>
             <Typography variant="h5" gutterBottom>{t('analysis_title')}</Typography>
-            
+
             <FormControl fullWidth error={!!errors.stage}>
               <FormLabel>{t('stage_select_label')} *</FormLabel>
               <Select
                 value={formData.stage}
-                onChange={(e) => setFormData({...formData, stage: e.target.value})}
+                onChange={(e) => { setFormData({...formData, stage: e.target.value}); setFieldOrigins(prev => ({ ...prev, stage: 'user' })); }}
                 displayEmpty
               >
                 <MenuItem value="">— {t('select_stage')} —</MenuItem>
