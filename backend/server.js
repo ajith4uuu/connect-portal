@@ -440,7 +440,7 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
 
 // Submit survey
 app.post('/api/submit', async (req, res) => {
-  const { extracted, answers, lang = 'en', lobularPdfName } = req.body;
+  const { extracted, answers, lang = 'en', lobularPdfName, biomarkers } = req.body;
   const t = translations[lang] || translations.en;
 
   try {
