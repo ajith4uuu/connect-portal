@@ -517,6 +517,7 @@ app.post('/api/submit', async (req, res) => {
       treatment_packages: packages,
       pdf_url: pdfUrl || null,
       lobular_pdf_name: lobularPdfName || null,
+      selected_pdf_name: selectedPdfName || null,
       ai_summary: aiSummary || null,
       extracted_data: JSON.stringify(extracted),
       raw_responses: JSON.stringify(answers)
