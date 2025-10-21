@@ -882,7 +882,14 @@ function Survey({ onComplete }) {
           <Box ref={stepperScrollRef} className="stepper-scroll-container" sx={{ mt: '30px' }}>
             <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
               {[...staticSteps, ...filteredQuestions.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
-                <Step key={index}>
+                <Step
+                  key={index}
+                  ref={(el) => {
+                    if (el) {
+                      stepRefs.current[index] = el;
+                    }
+                  }}
+                >
                   <StepLabel></StepLabel>
                 </Step>
               ))}
