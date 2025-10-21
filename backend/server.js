@@ -15,7 +15,7 @@ const nodemailer = require('nodemailer');
 const { VertexAI } = require('@google-cloud/aiplatform');
 
 const translations = require('./translations');
-const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, getPdfKey, parseReportDate, detectReportType, getLobularPdfUrl, LOBULAR_PDF_MAPPING } = require('./utils');
+const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, getPdfKey, parseReportDate, detectReportType, getLobularPdfUrl, LOBULAR_PDF_MAPPING, routePdfByBiomarker } = require('./utils');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
