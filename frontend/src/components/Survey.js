@@ -851,10 +851,14 @@ function Survey({ onComplete }) {
           <Typography><strong>{t('country_label')}:</strong> {formData.country}</Typography>
           <Typography><strong>{t('cancer_type_title')}:</strong> {formData.cancerType || t('not_specified')}</Typography>
 
-          {selectedPdfName && (
+          {selectedPdfName && formData.cancerType === t('cancer_type_lobular') && (
             <Typography sx={{ mt: 2, p: 1, bgcolor: '#e8f5e9', borderRadius: 1 }}>
               <strong>{t('cancer_type_lobular')} {t('package')}:</strong> {selectedPdfName}
             </Typography>
+          )}
+
+          {formData.stage && (
+            <Typography><strong>{t('stage_select_label')}:</strong> {formData.stage}</Typography>
           )}
 
           {surveyDefinition.map(q => {
