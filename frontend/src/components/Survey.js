@@ -117,6 +117,18 @@ function Survey({ onComplete }) {
     loadSurveyDefinition();
   }, [loadSurveyDefinition]);
 
+  // Update Lobular PDF when stage changes (if Lobular is selected)
+  useEffect(() => {
+    if (formData.cancerType === t('cancer_type_lobular') && formData.stage) {
+      const pdfMapping = LOBULAR_PDF_MAP[formData.stage];
+      if (pdfMapping) {
+        setSelectedPdfName(pdfMapping.name);
+      } else {
+        setSelectedPdfName('');
+      }
+    }
+  }, [formData.stage, formData.cancerType, t]);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       'application/pdf': ['.pdf'],
