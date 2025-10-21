@@ -34,6 +34,26 @@ const LOBULAR_PDF_MAPPING = {
   'Stage IV Lobular': 'https://storage.googleapis.com/bcc-connect-pdfs/con/Stage_IV_ILC_Breast_Cancer_2.pdf'
 };
 
+// Biomarker-based PDF routing for non-Lobular cancers
+const BIOMARKER_PDF_URLS = {
+  "StageIV_BreastCancer_ER+_PR+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageIV_BreastCancer_ER%2B_PR%2B.pdf",
+  "StageIV_BreastCancer_HER2+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageIV_BreastCancer_HER2%2B.pdf",
+  "StageIV_BreastCancer_core_info.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageIV_BreastCancer_core_info.pdf",
+  "StageIV_BreastCancer_ER+PR+_HER2+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageIV_BreastCancer_ER%2BPR%2B_HER2%2B.pdf",
+  "StageIII_ER+orPR+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageIII_ER%2BorPR%2B.pdf",
+  "StageIII_BreastCancer_coreinfo.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageIII_BreastCancer_coreinfo.pdf",
+  "StageIII_BRCA+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageIII_BRCA%2B.pdf",
+  "StageIII_ER+orPR+_HER2+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageIII_ER%2BorPR%2B_HER2%2B.pdf",
+  "StageIII_HER2+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageIII_HER2%2B.pdf",
+  "StageII_ER+orPR+_HER2+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageII_ER%2BorPR%2B_HER2%2B.pdf",
+  "StageII_ER+orPR+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageII_ER%2BorPR%2B.pdf",
+  "StageII_HER2+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageII_HER2%2B.pdf",
+  "StageII_BreastCancer_BRCA+.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageII_BreastCancer_BRCA%2B.pdf",
+  "StageII_BreastCancer _coreinfo.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/StageII_BreastCancer%20_coreinfo.pdf",
+  "Stagel_BreastCancer_coreinfo.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/Stagel_BreastCancer_coreinfo.pdf",
+  "Stage0orDCIS_core info.pdf": "https://storage.googleapis.com/bcc-connect-pdfs/con/Stage0orDCIS_core%20info.pdf"
+};
+
 function extractDataFromText(txt) {
   const t = translations.en; // Always extract in English
   
