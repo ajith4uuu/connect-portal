@@ -6,7 +6,7 @@ import {
   Button, TextField, Radio, RadioGroup, FormControlLabel,
   FormControl, FormLabel, Select, MenuItem, Checkbox,
   FormGroup, Typography, LinearProgress,
-  Dialog, DialogTitle, DialogContent, DialogActions, IconButton
+  Dialog, DialogTitle, DialogContent, DialogActions, IconButton, FormHelperText
 } from '@mui/material';
 import { CloudUpload, NavigateNext, NavigateBefore, ArrowBackIosNew, ArrowForwardIos } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
@@ -15,6 +15,30 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || '';
 const DOC_API_URL = process.env.REACT_APP_DOC_API_URL || '';
+
+// Lobular carcinoma PDF mapping by stage
+const LOBULAR_PDF_MAP = {
+  'DCIS / Stage 0': {
+    name: 'LCIS',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LOBULAR_CARCINOMA_IN-SITU_(LCIS)_2.pdf'
+  },
+  'Stage I': {
+    name: 'Stage 1 Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/STAGE_1_LOBULAR_BREAST_CANCER_2.pdf'
+  },
+  'Stage II': {
+    name: 'Stage II Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_II_2.pdf'
+  },
+  'Stage III': {
+    name: 'Stage III Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/LCIC_stage_III_2.pdf'
+  },
+  'Stage IV': {
+    name: 'Stage IV Lobular',
+    url: 'https://storage.googleapis.com/bcc-connect-pdfs/con/Stage_IV_ILC_Breast_Cancer_2.pdf'
+  }
+};
 
 function Survey({ onComplete }) {
   const { t, i18n } = useTranslation();
@@ -44,6 +68,9 @@ function Survey({ onComplete }) {
 
   // Track field origins (ai or user)
   const [fieldOrigins, setFieldOrigins] = useState({});
+
+  // Track selected PDF for Lobular carcinoma
+  const [selectedPdfName, setSelectedPdfName] = useState('');
 
   // Stepper scrolling refs
   const stepperScrollRef = useRef(null);
@@ -303,22 +330,32 @@ function Survey({ onComplete }) {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    
+
     // Collect all dynamic question answers
     const dynamicAnswers = {};
     surveyDefinition.forEach(q => {
       dynamicAnswers[q.id] = formData[q.id] || '';
     });
-    
+
+    // Map biomarker fields from form data or dynamic answers for biomarker routing
+    const biomarkerData = {
+      ER_status: dynamicAnswers.ER || formData.ERPR || extractedData.ERPR || 'Unknown',
+      PR_status: dynamicAnswers.PR || formData.ERPR || extractedData.ERPR || 'Unknown',
+      HER2_status: dynamicAnswers.HER2 || formData.HER2 || extractedData.HER2 || 'Unknown',
+      BRCA_status: dynamicAnswers.BRCA || formData.BRCA || extractedData.BRCA || 'Unknown'
+    };
+
     const submitData = {
       extracted: extractedData,
       answers: { ...formData, ...dynamicAnswers },
-      lang: i18n.language
+      lang: i18n.language,
+      lobularPdfName: selectedPdfName,
+      biomarkers: biomarkerData
     };
 
     try {
       const response = await axios.post(`${API_URL}/api/submit`, submitData);
-      
+
       if (response.data.success) {
         onComplete(response.data.data);
         navigate('/thank-you');
@@ -338,7 +375,7 @@ function Survey({ onComplete }) {
       const left = el.offsetLeft - container.clientWidth / 2 + el.clientWidth / 2;
       container.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
     }
-  }, [activeStep, surveyDefinition.length]);
+  }, [activeStep, surveyDefinition, filteredQuestions]);
 
   // Clamp activeStep if filtered steps shrink (e.g., hiding 'spread' when not Stage IV)
   useEffect(() => {
@@ -346,7 +383,7 @@ function Survey({ onComplete }) {
     if (activeStep > maxIndex) {
       setActiveStep(maxIndex);
     }
-  }, [totalSteps]);
+  }, [totalSteps, activeStep]);
 
   const scrollSteps = (dir) => {
     const container = stepperScrollRef.current;
@@ -354,6 +391,33 @@ function Survey({ onComplete }) {
     const amount = Math.round(container.clientWidth * 0.6) * (dir === 'left' ? -1 : 1);
     container.scrollBy({ left: amount, behavior: 'smooth' });
   };
+
+  // Auto-scroll stepper to keep active step visible
+  useEffect(() => {
+    const container = stepperScrollRef.current;
+    const activeStepElement = stepRefs.current[activeStep];
+
+    if (!container || !activeStepElement) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const stepRect = activeStepElement.getBoundingClientRect();
+
+    // Check if step is outside visible area and scroll if needed
+    const isLeftOutside = stepRect.left < containerRect.left;
+    const isRightOutside = stepRect.right > containerRect.right;
+
+    if (isLeftOutside) {
+      container.scrollBy({
+        left: stepRect.left - containerRect.left - 50,
+        behavior: 'smooth'
+      });
+    } else if (isRightOutside) {
+      container.scrollBy({
+        left: stepRect.right - containerRect.right + 50,
+        behavior: 'smooth'
+      });
+    }
+  }, [activeStep]);
 
 
   const renderStepContent = () => {
@@ -539,7 +603,7 @@ function Survey({ onComplete }) {
               value={formData.age}
               onChange={(e) => { setFormData({...formData, age: e.target.value}); setFieldOrigins(prev => ({ ...prev, age: 'user' })); }}
               error={!!errors.age}
-              helperText={errors.age}
+              helperText={errors.age || (fieldOrigins.age === 'ai' ? 'Extracted from your report by AI' : '')}
               margin="normal"
               InputProps={{ inputProps: { min: 18, max: 120 } }}
             />
@@ -550,7 +614,7 @@ function Survey({ onComplete }) {
               value={formData.province}
               onChange={(e) => { setFormData({...formData, province: e.target.value}); setFieldOrigins(prev => ({ ...prev, province: 'user' })); }}
               error={!!errors.province}
-              helperText={errors.province}
+              helperText={errors.province || (fieldOrigins.province === 'ai' ? 'Extracted from your report by AI' : '')}
               placeholder={t('province_placeholder')}
               margin="normal"
             />
@@ -566,6 +630,7 @@ function Survey({ onComplete }) {
                 <MenuItem value="United States">{t('usa')}</MenuItem>
                 <MenuItem value="Other">{t('other')}</MenuItem>
               </Select>
+              {fieldOrigins.country === 'ai' && <FormHelperText>Extracted from your report by AI</FormHelperText>}
             </FormControl>
           </Box>
         );
@@ -589,6 +654,7 @@ function Survey({ onComplete }) {
                 <MenuItem value="Stage III">{t('stage3')}</MenuItem>
                 <MenuItem value="Stage IV">{t('stage4')}</MenuItem>
               </Select>
+              {fieldOrigins.stage === 'ai' && <FormHelperText>Extracted from your report by AI</FormHelperText>}
             </FormControl>
           </Box>
         );
@@ -601,7 +667,21 @@ function Survey({ onComplete }) {
               <FormLabel component="legend">{`${t('cancer_type_question')} *`}</FormLabel>
               <RadioGroup
                 value={formData.cancerType}
-                onChange={(e) => { setFormData({ ...formData, cancerType: e.target.value }); setFieldOrigins(prev => ({ ...prev, cancerType: 'user' })); } }
+                onChange={(e) => {
+                  const selectedType = e.target.value;
+                  setFormData({ ...formData, cancerType: selectedType });
+                  setFieldOrigins(prev => ({ ...prev, cancerType: 'user' }));
+
+                  // If Lobular is selected, compute the PDF name and URL based on stage
+                  if (selectedType === t('cancer_type_lobular') && formData.stage) {
+                    const pdfMapping = LOBULAR_PDF_MAP[formData.stage];
+                    if (pdfMapping) {
+                      setSelectedPdfName(pdfMapping.name);
+                    }
+                  } else {
+                    setSelectedPdfName('');
+                  }
+                }}
               >
                 <FormControlLabel value={t('cancer_type_ductal')} control={<Radio />} label={t('cancer_type_ductal')} />
                 <FormControlLabel value={t('cancer_type_lobular')} control={<Radio />} label={t('cancer_type_lobular')} />
@@ -675,6 +755,7 @@ function Survey({ onComplete }) {
                 ))}
               </Select>
               {error && <Typography color="error" variant="caption">{error}</Typography>}
+              {fieldOrigins[question.id] === 'ai' && <FormHelperText>Extracted from your report by AI</FormHelperText>}
             </FormControl>
           </Box>
         );
@@ -741,7 +822,7 @@ function Survey({ onComplete }) {
               value={value}
               onChange={(e) => { setFormData({...formData, [question.id]: e.target.value}); setFieldOrigins(prev => ({ ...prev, [question.id]: 'user' })); }}
               error={!!error}
-              helperText={error}
+              helperText={error || (fieldOrigins[question.id] === 'ai' ? 'Extracted from your report by AI' : '')}
               placeholder={question.placeholder}
               margin="normal"
             />
@@ -754,15 +835,15 @@ function Survey({ onComplete }) {
     return (
       <Box>
         <Typography variant="h5" gutterBottom>{t('review_title')}</Typography>
-        
+
         <Box sx={{ bgcolor: '#f8d7e4', p: 2, borderLeft: '4px solid #e5317a', mb: 3 }}>
           <Typography variant="subtitle1">
             {t('selected_stage')}: <strong>{formData.stage}</strong>
           </Typography>
         </Box>
-        
+
         <Typography variant="h6" gutterBottom>{t('your_responses')}</Typography>
-        
+
         <Box sx={{ mb: 3 }}>
           <Typography><strong>{t('email_label')}:</strong> {formData.email}</Typography>
           <Typography><strong>{t('age_label')}:</strong> {formData.age}</Typography>
@@ -770,10 +851,20 @@ function Survey({ onComplete }) {
           <Typography><strong>{t('country_label')}:</strong> {formData.country}</Typography>
           <Typography><strong>{t('cancer_type_title')}:</strong> {formData.cancerType || t('not_specified')}</Typography>
 
+          {selectedPdfName && formData.cancerType === t('cancer_type_lobular') && (
+            <Typography sx={{ mt: 2, p: 1, bgcolor: '#e8f5e9', borderRadius: 1 }}>
+              <strong>{t('cancer_type_lobular')} {t('package')}:</strong> {selectedPdfName}
+            </Typography>
+          )}
+
+          {formData.stage && (
+            <Typography><strong>{t('stage_select_label')}:</strong> {formData.stage}</Typography>
+          )}
+
           {surveyDefinition.map(q => {
             const value = formData[q.id];
             if (!value) return null;
-            
+
             return (
               <Typography key={q.id}>
                 <strong>{q.title}:</strong> {Array.isArray(value) ? value.join(', ') : value}
@@ -781,7 +872,7 @@ function Survey({ onComplete }) {
             );
           })}
         </Box>
-        
+
         {submitting && (
           <Box sx={{ mb: 2 }}>
             <LinearProgress />
@@ -804,12 +895,15 @@ function Survey({ onComplete }) {
           <Box ref={stepperScrollRef} className="stepper-scroll-container" sx={{ mt: '30px' }}>
             <Stepper activeStep={activeStep} sx={{ mb: 0, minWidth: 'max-content' }} alternativeLabel>
               {[...staticSteps, ...filteredQuestions.map(q => q.title.substring(0, 20)), t('review_title')].map((label, index) => (
-                <Step key={index}>
-                  <StepLabel>
-                    <span ref={(el) => { stepRefs.current[index] = el; }}>
-                      {index === activeStep ? label : ''}
-                    </span>
-                  </StepLabel>
+                <Step
+                  key={index}
+                  ref={(el) => {
+                    if (el) {
+                      stepRefs.current[index] = el;
+                    }
+                  }}
+                >
+                  <StepLabel></StepLabel>
                 </Step>
               ))}
             </Stepper>

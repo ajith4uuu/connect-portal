@@ -15,7 +15,7 @@ const nodemailer = require('nodemailer');
 const { VertexAI } = require('@google-cloud/aiplatform');
 
 const translations = require('./translations');
-const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, getPdfKey, parseReportDate, detectReportType } = require('./utils');
+const { extractDataFromText, calculateStageFromBiomarkers, computePackages, getPdfLink, getPdfKey, parseReportDate, detectReportType, getLobularPdfUrl, LOBULAR_PDF_MAPPING, routePdfByBiomarker } = require('./utils');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -440,22 +440,47 @@ app.post('/api/upload', upload.array('files', 10), async (req, res) => {
 
 // Submit survey
 app.post('/api/submit', async (req, res) => {
-  const { extracted, answers, lang = 'en' } = req.body;
+  const { extracted, answers, lang = 'en', lobularPdfName, biomarkers } = req.body;
   const t = translations[lang] || translations.en;
-  
+
   try {
     // Generate unique ID
     const responseId = uuidv4();
-    
+
     // Determine stages
     const calculatedStage = calculateStageFromBiomarkers(extracted);
     const userStage = answers.stage || calculatedStage;
-    
+
     // Get treatment packages
     const packages = computePackages(userStage, extracted);
-    
-    // Get PDF link (prefer GCS if configured)
-    const pdfUrl = await resolvePdfUrl(userStage, extracted);
+
+    // Get PDF link - use Lobular PDF if selected, otherwise use biomarker routing
+    let pdfUrl = '';
+    let selectedPdfName = '';
+    if (lobularPdfName && LOBULAR_PDF_MAPPING[lobularPdfName]) {
+      pdfUrl = LOBULAR_PDF_MAPPING[lobularPdfName];
+      selectedPdfName = lobularPdfName;
+    } else {
+      // Use biomarker routing for non-Lobular cancers
+      const er_status = biomarkers?.ER_status || answers.ER_status || answers.ERPR || extracted.ER_status || extracted.ERPR || 'Unknown';
+      const pr_status = biomarkers?.PR_status || answers.PR_status || answers.ERPR || extracted.PR_status || extracted.ERPR || 'Unknown';
+      const her2_status = biomarkers?.HER2_status || answers.HER2_status || answers.HER2 || extracted.HER2_status || extracted.HER2 || 'Unknown';
+      const brca_status = biomarkers?.BRCA_status || answers.BRCA_status || answers.BRCA || extracted.BRCA_status || extracted.BRCA || 'Unknown';
+
+      const biomarkerRoute = routePdfByBiomarker(
+        userStage,
+        er_status,
+        pr_status,
+        her2_status,
+        brca_status
+      );
+      if (biomarkerRoute && biomarkerRoute.url) {
+        pdfUrl = biomarkerRoute.url;
+        selectedPdfName = biomarkerRoute.selected_pdf;
+      } else {
+        pdfUrl = await resolvePdfUrl(userStage, extracted);
+      }
+    }
 
     // Generate AI summary
     let aiSummary = '';
@@ -496,6 +521,8 @@ app.post('/api/submit', async (req, res) => {
       spread_locations: Array.isArray(answers.spread) ? answers.spread : [],
       treatment_packages: packages,
       pdf_url: pdfUrl || null,
+      lobular_pdf_name: lobularPdfName || null,
+      selected_pdf_name: selectedPdfName || null,
       ai_summary: aiSummary || null,
       extracted_data: JSON.stringify(extracted),
       raw_responses: JSON.stringify(answers)
@@ -522,6 +549,7 @@ app.post('/api/submit', async (req, res) => {
         userStage,
         calculatedStage,
         packages: packages.join('; '),
+        selectedPdfName: selectedPdfName,
         downloadUrl: pdfUrl,
         geminiSummary: aiSummary
       }

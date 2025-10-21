@@ -49,6 +49,11 @@ function ThankYou({ data }) {
                 <strong>{t('bcc_package')}:</strong> {data.packages}
               </Typography>
             )}
+            {data.selectedPdfName && (
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Selected PDF Package:</strong> {data.selectedPdfName}
+              </Typography>
+            )}
           </Paper>
 
           {data.geminiSummary && (
